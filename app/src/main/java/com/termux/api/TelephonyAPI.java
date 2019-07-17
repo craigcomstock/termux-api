@@ -30,7 +30,7 @@ public class TelephonyAPI {
     static void onReceiveTelephonyCellInfo(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.ResultJsonWriter() {
             @Override
-            public void writeJson(JsonWriter out) throws Exception {
+            public void writeJson(JsonWriter out) throws Exception, SecurityException {
                 TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                 out.beginArray();
 
@@ -113,7 +113,7 @@ public class TelephonyAPI {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.ResultJsonWriter() {
             @SuppressLint("HardwareIds")
             @Override
-            public void writeJson(JsonWriter out) throws Exception {
+            public void writeJson(JsonWriter out) throws Exception, SecurityException {
                 TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                 out.beginObject();
 

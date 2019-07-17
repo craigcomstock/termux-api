@@ -27,7 +27,7 @@ public class LocationAPI {
     static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
         ResultReturner.returnData(apiReceiver, intent, new ResultJsonWriter() {
             @Override
-            public void writeJson(final JsonWriter out) throws Exception {
+            public void writeJson(final JsonWriter out) throws Exception, SecurityException {
                 LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
                 String provider = intent.getStringExtra("provider");
