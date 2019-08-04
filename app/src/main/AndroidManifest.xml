@@ -9,9 +9,14 @@
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-<!-- added for MMS bits -->
-<uses-permission android:name="android.permission.RECEIVE_SMS" />
-<uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <!-- android-smsmms library needs -->
+    <uses-permission android:name="android.provider.Telephony.SMS_RECEIVED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <!-- Resolve phone numbers to contact names: -->
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
@@ -91,6 +96,52 @@
         <service
             android:name=".SchedulerJobService"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-    </application>
+
+	<!-- android-smsmms bits -->
+	<!-- TODO might need some sort of "main" activity to set default sms app? -->
+	<!-- https://github.com/klinker41/android-smsmms/blob/master/sample/src/main/java/com/klinker/android/messaging_sample/MainActivity.java#L110 -->
+        <service android:name="com.android.mms.transaction.TransactionService" />
+	
+        <receiver
+            android:name=".SmsReceiver"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_DELIVER" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".MmsReceiver"
+            android:permission="android.permission.BROADCAST_WAP_PUSH">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.klinker.android.send_message.MmsSentReceiver"
+            android:taskAffinity="com.klinker.android.messaging.MMS_SENT"/>
+
+        <receiver
+            android:name="com.klinker.android.send_message.MmsReceivedReceiver"
+android:taskAffinity="com.klinker.android.messaging.MMS_RECEIVED"/>
+	<!-- TODO do I need this service? -->
+        <service
+            android:name=".HeadlessSmsSendService"
+            android:exported="true"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE" >
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+	</service>
+	
+      </application>
 
 </manifest>
