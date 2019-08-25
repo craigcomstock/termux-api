@@ -16,11 +16,32 @@
 
 package com.termux.api;
 
-import com.android.mms.transaction.PushReceiver;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import com.termux.api.util.TermuxApiLogger;
+
+//import com.android.mms.transaction.PushReceiver;
 
 /**
  * Needed to make default sms app for testing
  */
-public class MmsReceiver extends PushReceiver {
+//public class MmsReceiver extends PushReceiver {
 
+public class MmsReceiver extends BroadcastReceiver {
+    private static final String TAG = MmsReceiver.class.getSimpleName();
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+	TermuxApiLogger.error("Got MMS broadcast..." + intent.getAction());
+
+	if (intent.getAction() != "android.provider.Telephony.WAP_PUSH_DELIVER") {
+	    TermuxApiLogger.error("Not WAP_PUSH_DELIVER so skip");
+	}
+
+	TermuxApiLogger.error("WAP_PUSH_DELIVER got extras="+intent.getExtras().toString());
+	TermuxApiLogger.error("WAP_PUSH_DELIVER pdus="+intent.getExtras().get("pdus"));
+    }
 }

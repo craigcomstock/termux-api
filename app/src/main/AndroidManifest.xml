@@ -32,7 +32,9 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
+		     tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.WRITE_APN_SETTINGS"
+		     tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
     <!-- Some of the used permissions imply uses-feature, so we need to make it optional.
@@ -104,15 +106,24 @@
 	
         <receiver
             android:name=".SmsReceiver"
+	    android:enabled="true"
             android:permission="android.permission.BROADCAST_SMS">
+	  <intent-filter>
+	    <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+	  </intent-filter>
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_DELIVER" />
             </intent-filter>
         </receiver>
 
         <receiver
-            android:name=".MmsReceiver"
+            android:name=".MmsReceivedReceiver"
+	    android:enabled="true"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
+	  <intent-filter>
+	    <action android:name="android.provider.Telephony.WAP_PUSH_RECEIVED"/>
+	    <data android:mimeType="aplication/vnd.wap.mms-message" />
+	  </intent-filter>
             <intent-filter>
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
                 <data android:mimeType="application/vnd.wap.mms-message" />
@@ -127,6 +138,8 @@
             android:name="com.klinker.android.send_message.MmsReceivedReceiver"
 android:taskAffinity="com.klinker.android.messaging.MMS_RECEIVED"/>
 	<!-- TODO do I need this service? -->
+	<!-- yes, I think this is one of the things that MUST be present -->
+	<!-- in order for this app to be considered an SMS app that is choosable as default -->
         <service
             android:name=".HeadlessSmsSendService"
             android:exported="true"
@@ -141,6 +154,21 @@ android:taskAffinity="com.klinker.android.messaging.MMS_RECEIVED"/>
                 <data android:scheme="mmsto" />
             </intent-filter>
 	</service>
+
+	<!-- does adding this compose service fix choosability as default sms app? -->	
+
+        <activity android:name=".ComposeSmsActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />                
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+        </activity>
 	
       </application>
 

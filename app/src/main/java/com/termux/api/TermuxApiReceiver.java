@@ -143,11 +143,22 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                     SmsInboxAPI.onReceive(this, context, intent);
                 }
                 break;
+	    case "MmsSend":
+		if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.READ_SMS, Manifest.permission.READ_PHONE_STATE)) {
+		    // TODO no Manifest.permission is appropriate for MmsSend as far as I can tell.
+		    MmsSendAPI.onReceive(this, context, intent);
+		}
+		break;
             case "SmsSend":
                 if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.SEND_SMS)) {
-                    SmsSendAPI.onReceive(this, intent);
+                    SmsSendAPI.onReceive(this, context, intent);
                 }
                 break;
+	    case "SmsSetup":
+		if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_SMS)) { // , Manifest.permission.RECEIVE_WAP_PUSH
+		    SmsSetupAPI.onReceive(this, context, intent);
+		}
+		break;
             case "StorageGet":
                 StorageGetAPI.onReceive(this, context, intent);
                 break;

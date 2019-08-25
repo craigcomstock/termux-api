@@ -19,6 +19,7 @@ package com.termux.api;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import com.termux.api.util.TermuxApiLogger;
 
 /**
  * Needed to make default sms app for testing
@@ -27,6 +28,7 @@ public class HeadlessSmsSendService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+	TermuxApiLogger.info("HeadlessSmsSendService.onBind() was called");
 	// TODO maybe check for default sms app here? But it needs to be an "app" right?
 	
         return null;
