@@ -1,8 +1,11 @@
 package com.termux.api;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Bundle;
 import android.telephony.SmsManager;
 
 import com.termux.api.util.ResultReturner;
@@ -21,59 +24,40 @@ public class MmsSendAPI {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
             @Override
             public void writeResult(PrintWriter out) {
-                //final SmsManager smsManager = SmsManager.getDefault();
-                String[] recipients = intent.getStringArrayExtra("recipients");
+                final SmsManager smsManager = SmsManager.getDefault();
+		String contentUriString = intent.getStringExtra("contentUri");
+                TermuxApiLogger.error("MmsSendAPI: contentUriString="+contentUriString);
+		Uri contentUri = Uri.parse(contentUriString);
+                TermuxApiLogger.error("MmsSendAPI: contentUri="+contentUri);
+		String locationUrl = null;
+		Bundle configOverrides = new Bundle();
+		/*
+            val configOverrides = bundleOf(
+                    Pair(SmsManager.MMS_CONFIG_GROUP_MMS_ENABLED, true),
+                    Pair(SmsManager.MMS_CONFIG_MAX_MESSAGE_SIZE, MmsConfig.getMaxMessageSize()))
 
-                if (recipients == null) {
-                    // Used by old versions of termux-send-sms.
-                    String recipient = intent.getStringExtra("recipient");
-                    if (recipient != null) recipients = new String[]{recipient};
-                }
+		            MmsConfig.getHttpParams()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { configOverrides.putString(SmsManager.MMS_CONFIG_HTTP_PARAMS, it) }
+		*/
 
-		// TODO rename this to SmsMmsSendAPI?
-		// or separate MmsSendAPI and let command line decide which to use?
-                if (recipients == null || recipients.length == 0) {
-                    TermuxApiLogger.error("No recipient given");
-                } else {
-		    //TermuxApiLogger.error("sending recipients="+recipients.toString()+", inputString="+inputString);
-		    //final ArrayList<String> messages = smsManager.divideMessage(inputString);
-		    //for (String recipient : recipients) {
-		    //smsManager.sendMultipartTextMessage(recipient, null, messages, null, null);
-		    //}
+		// a little borrow from Transaction.kt in QKSMS app to setup sentIntent
+		String MMS_SENT = "termux-api-mms-sent";
+		String EXTRA_CONTENT_URI = "content_uri";
+		String EXTRA_FILE_PATH = "file_path";
+		//PendingIntent sentIntent = new Intent(MMS_SENT);
+		//		BroadcastUtils.addClassName(context, sentIntent, MMS_SENT);
+		//sentIntent.putExtra(EXTRA_CONTENT_URI, contentUriString);
+	        //sentIntent.putExtra(EXTRA_FILE_PATH, sendFile.path)
+		intent.putExtra("api_method", MMS_SENT);
+		intent.putExtra("content_uri", contentUriString);
 
-		    try {
-			TermuxApiLogger.error("trying MMS of same message");
-			// for now, also send as MMS? :p
-			Settings settings = new Settings();
-			settings.setMmsc("http://mms.msg.eng.t-mobile.com/mms/wapenc");
-			//settings.setMmsc(settings.getMmsc());
-			//settings.setProxy("");
-			//settings.setPort("");
-			//settings.setUseSystemSending(true);
-			settings.setUseSystemSending(false);
-			settings.setGroup(true); // send group messages as MMS! :)
-			TermuxApiLogger.error("settings="+settings.toString());
-
-			com.klinker.android.logger.Log.setDebug(true); // this alone will get messages going to logcat. good.
-
-			//Settings settings = new Settings();
-			//settings.setUseSystemSending(true);
-			Transaction transaction = new Transaction(context, settings);
-			TermuxApiLogger.error("transaction="+transaction.toString());
-			Message message = new Message(inputString, recipients[0]); // TODO support multi-recipient but is that a different type of MMS message? GROUP?
-			TermuxApiLogger.error("message="+message.toString());
-			message.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher));
-			//message.setImage(mBitmap); // TODO support attaching images/generic files?
-			//transaction.sendNewMessage(message, threadId)
-			transaction.sendNewMessage(message, Transaction.NO_THREAD_ID);
-
-			TermuxApiLogger.error("after sendNewMessage(), transaction="+transaction.toString());
-		    } catch (Exception e) {
-			e.printStackTrace();
-			TermuxApiLogger.error("sending caused error:"+e);
-		    }
-                }
-
+		PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+		
+				
+		TermuxApiLogger.error("MmsSendAPI, before calling sendMultimediaMessage()");
+		smsManager.sendMultimediaMessage(context, contentUri, locationUrl, configOverrides, sentIntent);
+		TermuxApiLogger.error("MmsSendAPI, after calling sendMultimediaMessage()");
             }
         });
     }

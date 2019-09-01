@@ -26,11 +26,20 @@ public class TermuxApiReceiver extends BroadcastReceiver {
     }
 
     private void doWork(Context context, Intent intent) {
+	TermuxApiLogger.error("TermuxApiReceiver, intent:"+intent);
+	TermuxApiLogger.error("TermuxApiReceiver, resultCode="+getResultCode());
+	TermuxApiLogger.error("TermuxApiReceiver, extras:"+intent.getExtras());
+	TermuxApiLogger.error("TermuxApiReceiver, data string:"+intent.getDataString());
+	for (String key : intent.getExtras().keySet()) {
+	    TermuxApiLogger.error("TermuxApiReceiver, extra["+key+"]="+intent.getExtras().get(key));
+	}
+	
         String apiMethod = intent.getStringExtra("api_method");
         if (apiMethod == null) {
             TermuxApiLogger.error("Missing 'api_method' extra");
             return;
         }
+	TermuxApiLogger.error("intent had extra, api_method="+apiMethod);
 
         switch (apiMethod) {
             case "AudioInfo":
