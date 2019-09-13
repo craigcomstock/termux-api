@@ -47,8 +47,8 @@ public class MmsSendAPI {
 		String EXTRA_FILE_PATH = "file_path";
 		//PendingIntent sentIntent = new Intent(MMS_SENT);
 		//		BroadcastUtils.addClassName(context, sentIntent, MMS_SENT);
-		//sentIntent.putExtra(EXTRA_CONTENT_URI, contentUriString);
-	        //sentIntent.putExtra(EXTRA_FILE_PATH, sendFile.path)
+		intent.putExtra(EXTRA_CONTENT_URI, contentUriString);
+	        intent.putExtra(EXTRA_FILE_PATH, contentUriString); // hmm, what is this supposed to be?
 		intent.putExtra("api_method", MMS_SENT);
 		intent.putExtra("content_uri", contentUriString);
 
