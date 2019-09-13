@@ -1,41 +1,60 @@
 package com.termux.api;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
-import com.termux.api.util.TermuxApiLogger;
+import android.provider.Telephony;
+import android.util.Log;
 
-//public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsReceivedReceiver {
-public class MmsReceivedReceiver extends BroadcastReceiver {
-    
-    public final void onReceive(final Context context, final Intent intent) {
-        TermuxApiLogger.error("MmsReceivedReceiver, context="+context+", intent="+intent);
-	for (String key : intent.getExtras().keySet()) {
-	    TermuxApiLogger.error("MmsReceivedReceiver, extra["+key+"]="+intent.getExtras().get(key));
+public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsReceivedReceiver {
+    private static final String TAG = "MmsReceivedReceiver-api";
+
+    public void onMessageReceived(Context context, Uri messageUri) {
+	Log.e(TAG, "onMessageReceived, context="+context+", Uri="+messageUri);
+	Cursor cursor = context.getContentResolver().query(messageUri, null, null, null, null);
+	try {
+	    if (cursor.moveToFirst()) {
+		do {
+		    int id = cursor.getInt(cursor.getColumnIndex(Telephony.Mms._ID));
+		    String mmsId = cursor.getString(cursor.getColumnIndex(Telephony.Mms.MESSAGE_ID));
+		    String message = getMmsText(context, id);
+		    Log.e(TAG, "onMessageReceived, id="+id+", mmsId="+mmsId+", message="+message);
+		} while (cursor.moveToNext());
+	    }
+	} finally {
+	    cursor.close();
 	}
-	// contentTypeParameters={Charset=4}
-	byte[] data = intent.getByteArrayExtra("data");
-	TermuxApiLogger.error("MmsReceivedReceiver, data="+data);
-	TermuxApiLogger.error("MmsReceivedReceiver, new String(data)="+new String(data));
     }
 
-    /*
-    public void onMessageReceived(Context context, Uri messageUri) {
-	TermuxApiLogger.error("MmsReceivedReceiver, context="+context+", messageUri="+messageUri);
+    private String getMmsText(Context context, int id) {
+	String selectionPart = "mid=" + id;
+	Uri uri = Uri.parse("content://mms/part");
+	Cursor cursor = context.getContentResolver().query(uri, null, selectionPart, null, null);
+	try {
+	    if (cursor.moveToFirst()) {
+		do {
+		    String type = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.CONTENT_TYPE));
+		    Log.e(TAG, "getMmsText, type="+type);
+		    if ("text/plain".equals(type)) {
+			String path = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.TEXT));
+			if (path != null) {
+			    return path;
+			}
+		    }
+		}  while (cursor.moveToNext());
+	    }
+	} finally {
+	    cursor.close();
+	}
+	return null;
     }
     
     public void onError(Context context, String error) {
-	TermuxApiLogger.error("MmsReceivedReceiver, context="+context+", error="+error);
+	Log.e(TAG, "onError, context="+context+", error="+error);
     }
-    
-    public MmscInformation getMmscInforForReceptionAck() {
-	// TODO get from system and/or user specific APN settings
-	// https://support.t-mobile.com/docs/DOC-2090
-	String mmscUrl = "http://mms.msg.eng.t-mobile.com/mms/wapenc";
-	String mmsProxy = "";
-	int proxyPort = 0; // proxy port not set
-	return new MmscInformation(mmscUrl, mmsProxy, proxyPort);
+
+    public MmscInformation getMmscInfoForReceptionAck() {
+	return null; // TODO
     }
-    */
 }
+    
