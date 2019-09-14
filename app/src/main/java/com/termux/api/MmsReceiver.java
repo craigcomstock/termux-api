@@ -23,13 +23,17 @@ import android.os.Bundle;
 import android.util.Log;
 import com.termux.api.util.TermuxApiLogger;
 
-//import com.android.mms.transaction.PushReceiver;
+// android-smsmms/sample has only PushReceiver and extends that with not impl
+
+import com.android.mms.transaction.PushReceiver;
 
 /**
  * Needed to make default sms app for testing
  */
-//public class MmsReceiver extends PushReceiver {
+public class MmsReceiver extends PushReceiver {
 
+}
+    /*
 public class MmsReceiver extends BroadcastReceiver {
     private static final String TAG = MmsReceiver.class.getSimpleName();
 
@@ -45,3 +49,4 @@ public class MmsReceiver extends BroadcastReceiver {
 	TermuxApiLogger.error("WAP_PUSH_DELIVER pdus="+intent.getExtras().get("pdus"));
     }
 }
+    */

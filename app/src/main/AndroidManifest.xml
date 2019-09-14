@@ -31,8 +31,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- TODO: for some odd reason android-smsmms/sample had WRITE_EXTERNAL_STORAGE and this termux-api did not? -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <uses-permission android:name="android.permission.WRITE_SETTINGS"
 		     tools:ignore="ProtectedPermissions" />
+    <!-- TODO: android-smsmms/sample didn't have WRITE_APN_SETTINGS, do we need it? -->
     <uses-permission android:name="android.permission.WRITE_APN_SETTINGS"
 		     tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
@@ -97,7 +101,7 @@
         </service>
         <service
             android:name=".SchedulerJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
 
 	<!-- android-smsmms bits -->
 	<!-- TODO might need some sort of "main" activity to set default sms app? -->
@@ -116,24 +120,31 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name=".MmsReceivedReceiver"
-	    android:enabled="true"
-	    android:taskAffinity="com.klinker.android.messages.MMS_RECEIVED"
-            android:permission="android.permission.BROADCAST_WAP_PUSH">
+	<!-- TODO: android-smsmms has .MmsReceiver getting WAP_PUSH and WAP_PUSH_DELIVER, not MmsReceivedReceiver getting them, so changing this. -->
+	<receiver
+	    android:name=".MmsReceiver"
+	    android:permission="android.permission.BROADCAST_WAP_PUSH">
 	  <intent-filter>
 	    <action android:name="android.provider.Telephony.WAP_PUSH_RECEIVED"/>
 	    <data android:mimeType="aplication/vnd.wap.mms-message" />
 	  </intent-filter>
+	</receiver>
+
+	<!-- android-smsmms/sample has plain ol' send_message.MmsSentReceiver, so why am I overriding that? -->
+	<!-- TODO: AHA! That's the problem!!! that ol' class has a bunch of bits in there and looks at EXTRA_CONTENT_URI and EXTRA_FILE_PATH? -->
+        <receiver
+            android:name="com.klinker.android.send_message.MmsSentReceiver"
+            android:taskAffinity="com.klinker.android.messaging.MMS_SENT"/>
+        <receiver
+            android:name=".MmsReceivedReceiver"
+	    android:enabled="true"
+	    android:taskAffinity="com.klinker.android.messages.MMS_RECEIVED">
             <intent-filter>
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
                 <data android:mimeType="application/vnd.wap.mms-message" />
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name=".MmsSentReceiver"
-            android:taskAffinity="com.klinker.android.messaging.MMS_SENT"/>
 
 	<!-- TODO do I need this service? -->
 	<!-- yes, I think this is one of the things that MUST be present -->

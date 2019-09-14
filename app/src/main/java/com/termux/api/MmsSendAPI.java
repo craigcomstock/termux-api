@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.SmsManager;
+import android.util.Log;
 
 import com.termux.api.util.ResultReturner;
 import com.termux.api.util.TermuxApiLogger;
@@ -22,6 +23,8 @@ import com.klinker.android.send_message.Transaction;
 
 public class MmsSendAPI {
 
+    private static final String TAG = "MmsSendAPI";
+    
     static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
             @Override
@@ -32,7 +35,10 @@ public class MmsSendAPI {
 		sendSettings.setPort(null);
 		sendSettings.setUseSystemSending(true);
 
-		Transaction transaction = new Transaction(context, sendSettings);
+		Log.e( TAG, "context.getCacheDir()="+context.getCacheDir());
+		
+	        Transaction transaction = new Transaction(context, sendSettings);
+
 		// TODO send raw MMS message composed by python right?
 		// Or just keep it simple, text and to[] array so group messaging works :+1:
 		Message message = new Message("test message", "+17859791028");
