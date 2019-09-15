@@ -7,16 +7,20 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
     <!-- android-smsmms library needs -->
-    <uses-permission android:name="android.provider.Telephony.SMS_RECEIVED" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.WRITE_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.provider.Telephony.SMS_RECEIVED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Resolve phone numbers to contact names: -->
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
@@ -27,13 +31,7 @@
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.TRANSMIT_IR" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <!-- TODO: for some odd reason android-smsmms/sample had WRITE_EXTERNAL_STORAGE and this termux-api did not? -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
     <uses-permission android:name="android.permission.WRITE_SETTINGS"
 		     tools:ignore="ProtectedPermissions" />
     <!-- TODO: android-smsmms/sample didn't have WRITE_APN_SETTINGS, do we need it? -->
@@ -110,34 +108,27 @@
 	
         <receiver
             android:name=".SmsReceiver"
-	    android:enabled="true"
             android:permission="android.permission.BROADCAST_SMS">
-	  <intent-filter>
-	    <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
-	  </intent-filter>
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SMS_DELIVER" />
-            </intent-filter>
+          <intent-filter>
+            <action android:name="android.provider.Telephony.SMS_DELIVER"/>
+          </intent-filter>
         </receiver>
 
-	<!-- TODO: android-smsmms has .MmsReceiver getting WAP_PUSH and WAP_PUSH_DELIVER, not MmsReceivedReceiver getting them, so changing this. -->
 	<receiver
 	    android:name=".MmsReceiver"
 	    android:permission="android.permission.BROADCAST_WAP_PUSH">
 	  <intent-filter>
-	    <action android:name="android.provider.Telephony.WAP_PUSH_RECEIVED"/>
-	    <data android:mimeType="aplication/vnd.wap.mms-message" />
+	    <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER"/>
+	    <data android:mimeType="application/vnd.wap.mms-message" />
 	  </intent-filter>
 	</receiver>
 
-	<!-- android-smsmms/sample has plain ol' send_message.MmsSentReceiver, so why am I overriding that? -->
-	<!-- TODO: AHA! That's the problem!!! that ol' class has a bunch of bits in there and looks at EXTRA_CONTENT_URI and EXTRA_FILE_PATH? -->
         <receiver
             android:name="com.klinker.android.send_message.MmsSentReceiver"
             android:taskAffinity="com.klinker.android.messaging.MMS_SENT"/>
+	
         <receiver
             android:name=".MmsReceivedReceiver"
-	    android:enabled="true"
 	    android:taskAffinity="com.klinker.android.messages.MMS_RECEIVED">
             <intent-filter>
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
