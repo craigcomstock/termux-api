@@ -101,9 +101,6 @@
             android:name=".SchedulerJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
 
-	<!-- android-smsmms bits -->
-	<!-- TODO might need some sort of "main" activity to set default sms app? -->
-	<!-- https://github.com/klinker41/android-smsmms/blob/master/sample/src/main/java/com/klinker/android/messaging_sample/MainActivity.java#L110 -->
         <service android:name="com.android.mms.transaction.TransactionService" />
 	
         <receiver
@@ -129,17 +126,8 @@
 	
         <receiver
             android:name=".MmsReceivedReceiver"
-	    android:taskAffinity="com.klinker.android.messages.MMS_RECEIVED">
-            <intent-filter>
-                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
-                <data android:mimeType="application/vnd.wap.mms-message" />
-            </intent-filter>
-        </receiver>
+	    android:taskAffinity="com.klinker.android.messaging.MMS_RECEIVED"/>
 
-
-	<!-- TODO do I need this service? -->
-	<!-- yes, I think this is one of the things that MUST be present -->
-	<!-- in order for this app to be considered an SMS app that is choosable as default -->
         <service
             android:name=".HeadlessSmsSendService"
             android:exported="true"
@@ -154,8 +142,6 @@
                 <data android:scheme="mmsto" />
             </intent-filter>
 	</service>
-
-	<!-- does adding this compose service fix choosability as default sms app? -->	
 
         <activity android:name=".ComposeSmsActivity" >
             <intent-filter>
