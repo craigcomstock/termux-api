@@ -29,6 +29,16 @@ public class MmsSendAPI {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
             @Override
             public void writeResult(PrintWriter out) {
+                String[] recipients = intent.getStringArrayExtra("recipients");
+		if (recipients == null) {
+		    String recipient = intent.getStringExtra("recipient");
+		    if (recipient != null) recipients = new String[]{recipient};
+		}
+		if (recipients == null || recipients.length == 0) {
+		    TermuxApiLogger.error("No recipients given");
+		    return;
+		}
+
 		com.klinker.android.send_message.Settings sendSettings = new com.klinker.android.send_message.Settings();
 		sendSettings.setMmsc("http://mms.msg.eng.t-mobile.com/mms/wapenc");
 		sendSettings.setProxy(null);
@@ -41,8 +51,12 @@ public class MmsSendAPI {
 
 		// TODO send raw MMS message composed by python right?
 		// Or just keep it simple, text and to[] array so group messaging works :+1:
-		Message message = new Message("test message", "+17859791028");
-                message.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.android));
+		Message message = new Message(inputString, recipients);
+		String imagePath = intent.getStringExtra("image");
+		if (imagePath != null) {
+		    message.setImage(BitmapFactory.decodeFile(imagePath));
+		}
+		//                message.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.android));
 		transaction.sendNewMessage(message, Transaction.NO_THREAD_ID);
             }
         });
