@@ -40,41 +40,7 @@ public class SmsSendAPI {
 		    for (String recipient : recipients) {
 			smsManager.sendMultipartTextMessage(recipient, null, messages, null, null);
 		    }
-
-		    /*
-		    try {
-			TermuxApiLogger.error("trying MMS of same message");
-			// for now, also send as MMS? :p
-			Settings settings = new Settings();
-			settings.setMmsc("http://mms.msg.eng.t-mobile.com/mms/wapenc");
-			//settings.setMmsc(settings.getMmsc());
-			//settings.setProxy("");
-			//settings.setPort("");
-			//settings.setUseSystemSending(true);
-			settings.setGroup(true); // send group messages as MMS! :)
-			TermuxApiLogger.error("settings="+settings.toString());
-
-			com.klinker.android.logger.Log.setDebug(true); // this alone will get messages going to logcat. good.
-
-			//Settings settings = new Settings();
-			//settings.setUseSystemSending(true);
-			Transaction transaction = new Transaction(context, settings);
-			TermuxApiLogger.error("transaction="+transaction.toString());
-			Message message = new Message(inputString, recipients[0]); // TODO support multi-recipient but is that a different type of MMS message? GROUP?
-			TermuxApiLogger.error("message="+message.toString());
-			message.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher));
-			//message.setImage(mBitmap); // TODO support attaching images/generic files?
-			//transaction.sendNewMessage(message, threadId)
-			transaction.sendNewMessage(message, Transaction.NO_THREAD_ID);
-
-			TermuxApiLogger.error("after sendNewMessage(), transaction="+transaction.toString());
-		    } catch (Exception e) {
-			e.printStackTrace();
-			TermuxApiLogger.error("sending caused error:"+e);
-		    }
-		    */
                 }
-
             }
         });
     }

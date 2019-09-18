@@ -33,7 +33,8 @@ import com.android.mms.transaction.PushReceiver;
 public class MmsReceiver extends PushReceiver {
 
 }
-    /*
+
+/*
 public class MmsReceiver extends BroadcastReceiver {
     private static final String TAG = MmsReceiver.class.getSimpleName();
 
@@ -49,4 +50,4 @@ public class MmsReceiver extends BroadcastReceiver {
 	TermuxApiLogger.error("WAP_PUSH_DELIVER pdus="+intent.getExtras().get("pdus"));
     }
 }
-    */
+*/

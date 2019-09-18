@@ -26,9 +26,8 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 import com.termux.api.util.TermuxApiLogger;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.io.File;
+import java.io.FileWriter;
 
 /**
  * Needed to make default sms app for testing
@@ -74,17 +73,17 @@ public class SmsReceiver extends BroadcastReceiver {
 	}
 
 	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/TermuxSmsInbox";
+	TermuxApiLogger.error("filename="+filename);
 	String msg = timestamp + " " + from + " " + body;
-	/*
 	try {
-	    Files.write(Paths.get(filename), msg.getBytes(), StandardOpenOption.APPEND);
+	    File file = new File(filename);
+	    FileWriter writer = new FileWriter(file, true);
+	    writer.write(msg);
+	    writer.close();
 	} catch (IOException ioe) {
-	*/
 	    TermuxApiLogger.error("Failed to write msg: "+msg);
-	    /*
 	    ioe.printStackTrace();
 	}
-	    */
 	// TODO make notifications optional by configuration in ~/.termux/sms.config or something
 	// for now, leave.
 

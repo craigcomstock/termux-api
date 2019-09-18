@@ -35,10 +35,17 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		do {
 		    String type = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.CONTENT_TYPE));
 		    Log.e(TAG, "getMmsText, type="+type);
+		    String text = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.TEXT));
+		    String _data = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part._DATA));
+		    String name = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.NAME));
+		    String filename = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.FILENAME));
+		    Log.e(TAG, "getMmsText, name="+name);
+		    Log.e(TAG, "getMmsText, filename="+filename);
+		    Log.e(TAG, "getMmsText, _data="+_data);
+		    Log.e(TAG, "getMmsText, text="+text);
 		    if ("text/plain".equals(type)) {
-			String path = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.TEXT));
-			if (path != null) {
-			    return path;
+			if (text != null) {
+			    return text;
 			}
 		    }
 		}  while (cursor.moveToNext());
@@ -54,7 +61,16 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
     }
 
     public MmscInformation getMmscInfoForReceptionAck() {
-	return null; // TODO
+        // Override this and provide the MMSC to send the ACK to.
+        // some carriers will download duplicate MMS messages without this ACK. When using the
+        // system sending method, apparently Google does not do this for us. Not sure why.
+        // You might have to have users manually enter their APN settings if you cannot get them
+        // from the system somehow.
+	String mmscUrl = "http://mms.msg.eng.t-mobile.com/mms/wapenc";
+	String mmsProxy = "";
+	int proxyPort = 0;
+	// com.klinker.android.send_message.MmsReceivedReceiver.
+	return new MmscInformation(mmscUrl, mmsProxy, proxyPort);
     }
 }
     
