@@ -31,15 +31,15 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    long dateReceived = cursor.getLong(cursor.getColumnIndex(Telephony.Mms.DATE)) * 1000;
 		    long dateSent = cursor.getLong(cursor.getColumnIndex(Telephony.Mms.DATE_SENT)) * 1000;
 		    String mmsId = cursor.getString(cursor.getColumnIndex(Telephony.Mms.MESSAGE_ID));
-    		    String from = getMmsFrom(context, id);
+    		    String addr = getMmsAddr(context, id); // format: <from> <to,to,to,to>
 		    String message = getMmsText(context, id);
-		    Log.e(TAG, "onMessageReceived, id="+id+", mmsId="+mmsId+", from="+from+", message="+message);
+		    Log.e(TAG, "onMessageReceived, id="+id+", mmsId="+mmsId+", addr="+addr+", message="+message);
 		    Log.e(TAG, "onMessageReceived, dateReceived="+dateReceived+", dateSent="+dateSent);
 
 		    // now save the message to the termux-smsmms-spool :)
 		    String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
 		    TermuxApiLogger.error("writing MMS to filename="+filename);
-		    String msg = DATE_FORMAT.format(dateReceived) + " " + from + " " + message + "\n";
+		    String msg = DATE_FORMAT.format(dateReceived) + " " + addr + " " + message + "\n";
 		    // TODO add [[image-file-path]] as a sort of org-style inline image reference :)
 		    try {
 			File file = new File(filename);
@@ -54,7 +54,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    // and notify
 		    Notification notification = new Notification.Builder(context)
 			.setContentText(message)
-			.setContentTitle("mms: " + from + ":")
+			.setContentTitle("mms: " + addr + ":")
 			.setSmallIcon(R.drawable.ic_alert)
 			.setStyle(new Notification.BigTextStyle().bigText(message))
 			.build();
@@ -67,12 +67,13 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 	}
     }
 
-    private String getMmsFrom(Context context, int id) {
+    private String getMmsAddr(Context context, int id) {
 	String selectionAdd = "msg_id=" + id;
 	String uriStr = MessageFormat.format("content://mms/{0}/addr", id);
 	Uri uriAddress = Uri.parse(uriStr);
 	Cursor cursor = context.getContentResolver().query(uriAddress, null, selectionAdd, null, null);
-	String numbers = "";
+	String from = "";
+	String to = "";
 	try {
 	    if (cursor.moveToFirst()) {
 		do {
@@ -81,17 +82,20 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    Log.e(TAG, "getMmsAddr, type="+type);
 		    Log.e(TAG, "getMmsAddr, number="+number);
 		    if (number != null && "151".equals(type)) { // TODO magic 151?
-			numbers += ","+number;
+			to += ","+number;
+		    }
+		    if (number != null && "137".equals(type)) { // TODO magic 137 means from?
+			from = number;
 		    }
 		} while (cursor.moveToNext());
 	    }
 	} finally {
 	    cursor.close();
 	}
-	if (numbers.charAt(0) == ',') {
-	    numbers = numbers.substring(1);
+	if (to.charAt(0) == ',') {
+	    to = to.substring(1);
 	}
-	return numbers;
+	return from + " => " + to;
     }
 
     private String getMmsText(Context context, int id) {

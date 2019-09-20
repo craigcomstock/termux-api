@@ -76,7 +76,8 @@ public class SmsReceiver extends BroadcastReceiver {
 
 	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
 	TermuxApiLogger.error("writing SMS to filename="+filename);
-	String msg = DATE_FORMAT.format(timestamp) + " " + from + " " + body + "\n";
+	// kinda bogus, but add a (self) as a to field to keep things inline with MMS group messages?
+	String msg = DATE_FORMAT.format(timestamp) + " " + from + " => (self) " + body + "\n";
 	try {
 	    File file = new File(filename);
 	    FileWriter writer = new FileWriter(file, true);
