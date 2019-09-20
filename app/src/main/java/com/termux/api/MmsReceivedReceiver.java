@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.provider.Telephony;
 import android.util.Log;
 
+import java.text.MessageFormat;
+
 public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsReceivedReceiver {
     private static final String TAG = "MmsReceivedReceiver-api";
 
@@ -17,6 +19,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		do {
 		    int id = cursor.getInt(cursor.getColumnIndex(Telephony.Mms._ID));
 		    String mmsId = cursor.getString(cursor.getColumnIndex(Telephony.Mms.MESSAGE_ID));
+    		    String addr = getMmsAddr(context, id);
 		    String message = getMmsText(context, id);
 		    Log.e(TAG, "onMessageReceived, id="+id+", mmsId="+mmsId+", message="+message);
 		} while (cursor.moveToNext());
@@ -24,6 +27,30 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 	} finally {
 	    cursor.close();
 	}
+    }
+
+    private String getMmsAddr(Context context, int id) {
+	String selectionAdd = "msg_id=" + id;
+	String uriStr = MessageFormat.format("content://mms/{0}/addr", id);
+	Uri uriAddress = Uri.parse(uriStr);
+	Cursor cursor = context.getContentResolver().query(uriAddress, null, selectionAdd, null, null);
+	String numbers = "";
+	try {
+	    if (cursor.moveToFirst()) {
+		do {
+		    String number = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Addr.ADDRESS));
+		    String type = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Addr.TYPE));
+		    Log.e(TAG, "getMmsAddr, type="+type);
+		    Log.e(TAG, "getMmsAddr, number="+number);
+		    if (number != null) {
+			numbers += ","+number;
+		    }
+		} while (cursor.moveToNext());
+	    }
+	} finally {
+	    cursor.close();
+	}
+	return numbers;
     }
 
     private String getMmsText(Context context, int id) {
