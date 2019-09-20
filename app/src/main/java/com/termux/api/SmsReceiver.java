@@ -28,6 +28,7 @@ import com.termux.api.util.TermuxApiLogger;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 
 /**
  * Needed to make default sms app for testing
@@ -35,6 +36,7 @@ import java.io.FileWriter;
 public class SmsReceiver extends BroadcastReceiver {
 
     private static final String TAG = SmsReceiver.class.getSimpleName();
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS"); // TODO share with MMS printouts
     
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -72,9 +74,9 @@ public class SmsReceiver extends BroadcastReceiver {
 	    return;
 	}
 
-	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/TermuxSmsInbox";
-	TermuxApiLogger.error("filename="+filename);
-	String msg = timestamp + " " + from + " " + body;
+	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
+	TermuxApiLogger.error("writing SMS to filename="+filename);
+	String msg = DATE_FORMAT.format(timestamp) + " " + from + " " + body + "\n";
 	try {
 	    File file = new File(filename);
 	    FileWriter writer = new FileWriter(file, true);
@@ -89,14 +91,12 @@ public class SmsReceiver extends BroadcastReceiver {
 
         Notification notification = new Notification.Builder(context)
                 .setContentText(body)
-                .setContentTitle("New Message")
+                .setContentTitle("sms:" + from + ":")
                 .setSmallIcon(R.drawable.ic_alert)
                 .setStyle(new Notification.BigTextStyle().bigText(body))
                 .build();
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
         notificationManagerCompat.notify(1, notification);
-
-	
 
     }
 

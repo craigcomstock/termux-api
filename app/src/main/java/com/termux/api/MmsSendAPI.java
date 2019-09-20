@@ -49,14 +49,11 @@ public class MmsSendAPI {
 		
 	        Transaction transaction = new Transaction(context, sendSettings);
 
-		// TODO send raw MMS message composed by python right?
-		// Or just keep it simple, text and to[] array so group messaging works :+1:
 		Message message = new Message(inputString, recipients);
 		String imagePath = intent.getStringExtra("image");
 		if (imagePath != null) {
 		    message.setImage(BitmapFactory.decodeFile(imagePath));
 		}
-		//                message.setImage(BitmapFactory.decodeResource(context.getResources(), R.drawable.android));
 		transaction.sendNewMessage(message, Transaction.NO_THREAD_ID);
             }
         });
