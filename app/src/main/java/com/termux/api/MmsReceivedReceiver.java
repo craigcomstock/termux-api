@@ -13,6 +13,12 @@ import com.termux.api.util.TermuxApiLogger;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 
@@ -98,10 +104,13 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 	return from + " => " + to;
     }
 
+    // TODO refactor to return text message and paths to any other attachments that we can save like images and such
     private String getMmsText(Context context, int id) {
 	String selectionPart = "mid=" + id;
 	Uri uri = Uri.parse("content://mms/part");
 	Cursor cursor = context.getContentResolver().query(uri, null, selectionPart, null, null);
+	String message = "";
+	
 	try {
 	    if (cursor.moveToFirst()) {
 		do {
@@ -117,16 +126,83 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    Log.e(TAG, "getMmsText, text="+text);
 		    if ("text/plain".equals(type)) {
 			if (text != null) {
-			    return text;
+			    message = text;
 			}
+		    }
+		    if (type.startsWith("image")) {
+			// HACK, FIXME, try to copy the image over to storage/mms/{id}/{name}
+			// copy _data path to storage
+			// TODO mkdirs and such
+			String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+			String destDir = MessageFormat.format("{0}/mms/{1}", storagePath, id);
+			new File(destDir).mkdirs();
+			
+			String destPath = MessageFormat.format("{0}/mms/{1}/{2}",
+							       storagePath,
+							       id,
+							       name);
+			Log.e(TAG, "getMmsText, destPath="+destPath);
+
+			String partId = cursor.getString(cursor.getColumnIndex("_id"));
+
+			// Let's just cut to the chase and save the thing off to destPath via filestream.
+			Uri partURI = Uri.parse("content://mms/part/" + partId);
+			InputStream is = null;
+			FileOutputStream os = null;
+			
+			try {
+			    is = context.getContentResolver().openInputStream(partURI);
+			    os = new FileOutputStream(new File(destPath));
+			
+			    byte[] buffer = new byte[1024];
+			    int length;
+			    while ((length = is.read(buffer)) > 0) {
+				os.write(buffer, 0, length);
+			    }
+			} catch(IOException ioe) {
+			    TermuxApiLogger.error("Failed to copy image from "+partURI+" to "+destPath);
+			    ioe.printStackTrace();
+			} finally {
+			    if (os != null) {
+				try {
+				    os.close();
+				} catch (IOException e) {}
+			    }
+			    if (is != null) {
+				try {
+				    is.close();
+				} catch (IOException e) {}
+			    }
+			}
+			message += " [[" + destPath + "]]";
 		    }
 		}  while (cursor.moveToNext());
 	    }
 	} finally {
 	    cursor.close();
 	}
-	return null;
+	return message;
     }
+
+    private static void copyFileUsingStream(File source, File dest) throws IOException {
+	InputStream is = null;
+	OutputStream os = null;
+	try {
+	    is = new FileInputStream(source);
+	    os = new FileOutputStream(dest);
+	    byte[] buffer = new byte[1024];
+	    int length;
+	    while ((length = is.read(buffer)) > 0) {
+		os.write(buffer, 0, length);
+	    }
+	} catch(Exception e) {
+	    e.printStackTrace();
+	    Log.e(TAG, "copyFileUsingStream() failed: "+e);
+	} finally {
+	    is.close();
+	    os.close();
+	}
+    }    
     
     public void onError(Context context, String error) {
 	Log.e(TAG, "onError, context="+context+", error="+error);
