@@ -126,7 +126,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    Log.e(TAG, "getMmsText, text="+text);
 		    if ("text/plain".equals(type)) {
 			if (text != null) {
-			    message = text;
+			    message = message + text;
 			}
 		    }
 		    if (type.startsWith("image")) {
