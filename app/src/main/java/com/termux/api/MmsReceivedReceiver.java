@@ -46,7 +46,6 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
 		    TermuxApiLogger.error("writing MMS to filename="+filename);
 		    String msg = DATE_FORMAT.format(dateReceived) + " " + addr + " " + message + "\n";
-		    // TODO add [[image-file-path]] as a sort of org-style inline image reference :)
 		    try {
 			File file = new File(filename);
 			FileWriter writer = new FileWriter(file, true);
@@ -126,7 +125,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    Log.e(TAG, "getMmsText, text="+text);
 		    if ("text/plain".equals(type)) {
 			if (text != null) {
-			    message = message + text;
+			    message = message + " " + text + " ";
 			}
 		    }
 		    if (type.startsWith("image")) {
@@ -174,7 +173,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 				} catch (IOException e) {}
 			    }
 			}
-			message += " [[" + destPath + "]]";
+			message += " [[" + destPath + "]] ";
 		    }
 		}  while (cursor.moveToNext());
 	    }
@@ -205,7 +204,29 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
     }    
     
     public void onError(Context context, String error) {
-	Log.e(TAG, "onError, context="+context+", error="+error);
+ 	Log.e(TAG, "onError, context="+context+", error="+error);
+	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
+	TermuxApiLogger.error("writing MMS to filename="+filename);
+	String msg = " ERROR: " + error + "\n";
+	try {
+	    File file = new File(filename);
+	    FileWriter writer = new FileWriter(file, true);
+	    writer.write(msg);
+	    writer.close();
+	} catch (IOException ioe) {
+	    TermuxApiLogger.error("Failed to write msg: "+msg);
+	    ioe.printStackTrace();
+	}
+	
+	// and notify
+	Notification notification = new Notification.Builder(context)
+	    .setContentText(msg)
+	    .setContentTitle("mms: " + msg)
+	    .setSmallIcon(R.drawable.ic_alert)
+	    .setStyle(new Notification.BigTextStyle().bigText(msg))
+	    .build();
+	NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
+	notificationManagerCompat.notify(1, notification);
     }
 
     public MmscInformation getMmscInfoForReceptionAck() {
