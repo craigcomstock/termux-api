@@ -28,6 +28,7 @@ import com.termux.api.util.TermuxApiLogger;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileWriter;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 
 /**
@@ -74,12 +75,15 @@ public class SmsReceiver extends BroadcastReceiver {
 	    return;
 	}
 
-	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
-	TermuxApiLogger.error("writing SMS to filename="+filename);
+	String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+	String destDir = MessageFormat.format("{0}/smsmms", storagePath);
+	new File(destDir).mkdirs();
+	String destPath = destDir + "/spool";
+	TermuxApiLogger.error("writing SMS to filename="+destPath);
 	// kinda bogus, but add a (self) as a to field to keep things inline with MMS group messages?
 	String msg = DATE_FORMAT.format(timestamp) + " " + from + " => (self) " + body + "\n";
 	try {
-	    File file = new File(filename);
+	    File file = new File(destPath);
 	    FileWriter writer = new FileWriter(file, true);
 	    writer.write(msg);
 	    writer.close();

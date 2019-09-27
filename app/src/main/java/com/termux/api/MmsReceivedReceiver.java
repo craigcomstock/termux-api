@@ -17,8 +17,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 
@@ -42,12 +40,14 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    Log.e(TAG, "onMessageReceived, id="+id+", mmsId="+mmsId+", addr="+addr+", message="+message);
 		    Log.e(TAG, "onMessageReceived, dateReceived="+dateReceived+", dateSent="+dateSent);
 
-		    // now save the message to the termux-smsmms-spool :)
-		    String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
-		    TermuxApiLogger.error("writing MMS to filename="+filename);
+		    String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+		    String destDir = MessageFormat.format("{0}/smsmms", storagePath, id);
+		    new File(destDir).mkdirs();
+		    String destPath = destDir + "/spool";
+		    TermuxApiLogger.error("writing MMS to filename="+destPath);
 		    String msg = DATE_FORMAT.format(dateReceived) + " " + addr + " " + message + "\n";
 		    try {
-			File file = new File(filename);
+			File file = new File(destPath);
 			FileWriter writer = new FileWriter(file, true);
 			writer.write(msg);
 			writer.close();
@@ -129,9 +129,6 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 			}
 		    }
 		    if (type.startsWith("image")) {
-			// HACK, FIXME, try to copy the image over to storage/mms/{id}/{name}
-			// copy _data path to storage
-			// TODO mkdirs and such
 			String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
 			String destDir = MessageFormat.format("{0}/mms/{1}", storagePath, id);
 			new File(destDir).mkdirs();
@@ -205,11 +202,14 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
     
     public void onError(Context context, String error) {
  	Log.e(TAG, "onError, context="+context+", error="+error);
-	String filename = Environment.getExternalStorageDirectory().getAbsolutePath() + "/termux-smsmms-spool";
-	TermuxApiLogger.error("writing MMS to filename="+filename);
+	String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+	String destDir = MessageFormat.format("{0}/smsmms", storagePath);
+	new File(destDir).mkdirs();
+	String destPath = destDir + "/spool";
+	TermuxApiLogger.error("writing MMS to destPath="+destPath);
 	String msg = " ERROR: " + error + "\n";
 	try {
-	    File file = new File(filename);
+	    File file = new File(destPath);
 	    FileWriter writer = new FileWriter(file, true);
 	    writer.write(msg);
 	    writer.close();
