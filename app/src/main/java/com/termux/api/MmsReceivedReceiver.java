@@ -28,7 +28,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 	Log.e(TAG, "onMessageReceived, context="+context+", Uri="+messageUri);
 	Cursor cursor = context.getContentResolver().query(messageUri, null, null, null, null);
 	try {
-	    if (cursor.moveToFirst()) {
+	    if (cursor != null && cursor.moveToFirst()) {
 		do {
 		    int id = cursor.getInt(cursor.getColumnIndex(Telephony.Mms._ID));
 		    // TODO why * 1000 ? observation, that's why.
@@ -41,7 +41,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    Log.e(TAG, "onMessageReceived, dateReceived="+dateReceived+", dateSent="+dateSent);
 
 		    String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-		    String destDir = MessageFormat.format("{0}/smsmms", storagePath, id);
+		    String destDir = MessageFormat.format("{0}/smsmms", storagePath);
 		    new File(destDir).mkdirs();
 		    String destPath = destDir + "/spool";
 		    TermuxApiLogger.error("writing MMS to filename="+destPath);
@@ -68,19 +68,22 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		} while (cursor.moveToNext());
 	    }
 	} finally {
-	    cursor.close();
+	    if (cursor != null) {
+		cursor.close();
+	    }
 	}
     }
 
     private String getMmsAddr(Context context, int id) {
 	String selectionAdd = "msg_id=" + id;
-	String uriStr = MessageFormat.format("content://mms/{0}/addr", id);
+	String uriStr = MessageFormat.format("content://mms/{0,number,#}/addr", id);
 	Uri uriAddress = Uri.parse(uriStr);
+	Log.e(TAG, "getMmsAddr, uriAddress="+uriAddress);
 	Cursor cursor = context.getContentResolver().query(uriAddress, null, selectionAdd, null, null);
 	String from = "";
 	String to = "";
 	try {
-	    if (cursor.moveToFirst()) {
+	    if (cursor != null && cursor.moveToFirst()) {
 		do {
 		    String number = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Addr.ADDRESS));
 		    String type = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Addr.TYPE));
@@ -95,7 +98,9 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		} while (cursor.moveToNext());
 	    }
 	} finally {
-	    cursor.close();
+	    if (cursor != null) {
+		cursor.close();
+	    }
 	}
 	if (to.charAt(0) == ',') {
 	    to = to.substring(1);
@@ -107,11 +112,12 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
     private String getMmsText(Context context, int id) {
 	String selectionPart = "mid=" + id;
 	Uri uri = Uri.parse("content://mms/part");
+	Log.e(TAG, "getMmsText, uri="+uri);
 	Cursor cursor = context.getContentResolver().query(uri, null, selectionPart, null, null);
 	String message = "";
 	
 	try {
-	    if (cursor.moveToFirst()) {
+	    if (cursor != null && cursor.moveToFirst()) {
 		do {
 		    String type = cursor.getString(cursor.getColumnIndex(Telephony.Mms.Part.CONTENT_TYPE));
 		    Log.e(TAG, "getMmsText, type="+type);
@@ -130,10 +136,10 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 		    }
 		    if (type.startsWith("image")) {
 			String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-			String destDir = MessageFormat.format("{0}/mms/{1}", storagePath, id);
+			String destDir = MessageFormat.format("{0}/mms/{1,number,#}", storagePath, id);
 			new File(destDir).mkdirs();
 			
-			String destPath = MessageFormat.format("{0}/mms/{1}/{2}",
+			String destPath = MessageFormat.format("{0}/mms/{1,number,#}/{2}",
 							       storagePath,
 							       id,
 							       name);
@@ -170,12 +176,14 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 				} catch (IOException e) {}
 			    }
 			}
-			message += " [[" + destPath + "]] ";
+			message += " file://" + destPath + " ";
 		    }
 		}  while (cursor.moveToNext());
 	    }
 	} finally {
-	    cursor.close();
+	    if (cursor != null) {
+		cursor.close();
+	    }
 	}
 	return message;
     }
