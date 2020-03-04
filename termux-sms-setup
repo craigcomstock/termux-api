@@ -1,0 +1,24 @@
+#!/data/data/com.termux/files/usr/bin/sh
+set -e -u
+
+SCRIPTNAME=termux-mms-send
+show_usage () {
+    echo "Usage: $SCRIPTNAME <no args>"
+    echo "Sets termux-api as default SMS app"
+    exit 0
+}
+
+while getopts :h: option
+do
+    case "$option" in
+        h) show_usage;;
+        ?) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1;
+    esac
+done
+
+CMD="/data/data/com.termux/files/usr/libexec/termux-api SmsSetup"
+if [ $# = 0 ]; then
+    $CMD
+else
+    echo $@ | $CMD
+fi

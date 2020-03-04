@@ -167,7 +167,7 @@ public class TelephonyAPI {
                     }
                     out.name("data_state").value(dataStateString);
 
-                    out.name("device_id").value(manager.getDeviceId());
+                    //                    out.name("device_id").value(manager.getDeviceId());
                     out.name("device_software_version").value(manager.getDeviceSoftwareVersion());
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -258,8 +258,8 @@ public class TelephonyAPI {
                     out.name("sim_country_iso").value(manager.getSimCountryIso());
                     out.name("sim_operator").value(manager.getSimOperator());
                     out.name("sim_operator_name").value(manager.getSimOperatorName());
-                    out.name("sim_serial_number").value(manager.getSimSerialNumber());
-                    out.name("sim_subscriber_id").value(manager.getSubscriberId());
+                    //                    out.name("sim_serial_number").value(manager.getSimSerialNumber());
+                    //                    out.name("sim_subscriber_id").value(manager.getSubscriberId());
                     int simState = manager.getSimState();
                     String simStateString;
                     switch (simState) {
