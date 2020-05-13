@@ -134,7 +134,8 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 			    message = message + " " + text + " ";
 			}
 		    }
-		    if (type.startsWith("image")) {
+//		    if (type.startsWith("image")) {
+                    if (_data != null) {
 			String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
 			String destDir = MessageFormat.format("{0}/mms/{1,number,#}", storagePath, id);
 			new File(destDir).mkdirs();
@@ -162,7 +163,7 @@ public class MmsReceivedReceiver extends com.klinker.android.send_message.MmsRec
 				os.write(buffer, 0, length);
 			    }
 			} catch(IOException ioe) {
-			    TermuxApiLogger.error("Failed to copy image from "+partURI+" to "+destPath);
+			    TermuxApiLogger.error("Failed to copy data from "+partURI+" to "+destPath);
 			    ioe.printStackTrace();
 			} finally {
 			    if (os != null) {

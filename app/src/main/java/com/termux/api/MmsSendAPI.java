@@ -60,6 +60,8 @@ public class MmsSendAPI {
 	        Transaction transaction = new Transaction(context, sendSettings);
 
 		Message message = new Message(inputString, recipients);
+// TODO other types of extras?
+// send two extras: 1) mime type 2) file url
 		String imagePath = intent.getStringExtra("image");
 		if (imagePath != null) {
 		    message.setImage(BitmapFactory.decodeFile(imagePath));
@@ -101,6 +103,7 @@ public class MmsSendAPI {
 		    ioe.printStackTrace();
 		}
 		transaction.sendNewMessage(message, Transaction.NO_THREAD_ID);
+// TODO how to track success or not? retries?
             }
         });
     }
