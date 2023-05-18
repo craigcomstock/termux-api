@@ -209,6 +209,11 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                     SmsSendAPI.onReceive(this, context, intent);
                 }
                 break;
+            case "SmsSetup":
+                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_SMS)) { // , Manifest.permission.RECEIVE_WAP_PUSH?
+                    SmsSetupAPI.onReceive(this, context, intent);
+                }
+                break;
             case "StorageGet":
                 StorageGetAPI.onReceive(this, context, intent);
                 break;

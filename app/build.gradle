@@ -64,6 +64,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.tibbi:android-smsmms:33fcaf94d9'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.biometric:biometric:1.2.0-alpha03'
     implementation 'androidx.media:media:1.4.3'
