@@ -80,6 +80,7 @@ dependencies {
     //implementation "com.termux:termux-shared:0.118.0"
 
     implementation "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava"
+    implementation 'com.github.tibbi:android-smsmms:33fcaf94d9'
 }
 
 task versionName {
