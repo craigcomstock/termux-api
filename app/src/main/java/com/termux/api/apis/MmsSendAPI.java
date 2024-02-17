@@ -36,7 +36,7 @@ public class MmsSendAPI {
     private static final String TAG = "MmsSendAPI";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS"); // TODO share with MMS printouts
 
-    static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
+    public static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
             @Override
             public void writeResult(PrintWriter out) {
