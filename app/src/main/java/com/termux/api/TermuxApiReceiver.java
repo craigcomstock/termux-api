@@ -26,6 +26,7 @@ import com.termux.api.apis.LocationAPI;
 import com.termux.api.apis.MediaPlayerAPI;
 import com.termux.api.apis.MediaScannerAPI;
 import com.termux.api.apis.MicRecorderAPI;
+import com.termux.api.apis.MmsSendAPI;
 import com.termux.api.apis.NfcAPI;
 import com.termux.api.apis.NotificationAPI;
 import com.termux.api.apis.NotificationListAPI;
