@@ -72,10 +72,11 @@ public class MmsSendAPI {
                     message.setImage(BitmapFactory.decodeFile(imagePath));
                 }
 
+                //TODO don't log messages by default, let whatever is using this API handle that :)
                 String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-                String destDir = MessageFormat.format("{0}/smsmms", storagePath);
+                String destDir = MessageFormat.format("{0}/mms", storagePath);
                 new File(destDir).mkdirs();
-                String destPath = destDir + "/spool";
+                String destPath = destDir + "/outbox";
                 // TODO recipients is a String[] array, so might need to format in some commas?
                 String to = "";
                 if (recipients != null) {
@@ -99,7 +100,7 @@ public class MmsSendAPI {
                     }
                 }
                  */
-                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + " " + imagePath + "\n";
+                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
                 try {
                     File file = new File(destPath);
                     FileWriter writer = new FileWriter(file, true);
