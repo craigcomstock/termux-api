@@ -1,5 +1,6 @@
 package com.termux.api.apis;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.telephony.SmsManager;
 import android.util.Log;
+
+import androidx.annotation.RequiresPermission;
 
 import com.termux.api.TermuxApiReceiver;
 import com.termux.api.util.ResultReturner;
@@ -38,6 +41,7 @@ public class MmsSendAPI {
 
     public static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
+            @RequiresPermission(allOf = { Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS })
             @Override
             public void writeResult(PrintWriter out) {
                 String[] recipients = intent.getStringArrayExtra("recipients");
