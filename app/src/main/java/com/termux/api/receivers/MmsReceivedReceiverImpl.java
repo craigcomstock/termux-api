@@ -224,7 +224,7 @@ E/MmsReceivedReceiverImpl: getMmsText, _data=/data/user_de/0/com.android.provide
     public void onError(Context context, String error) {
         Log.e(TAG, "onError, context="+context+", error="+error);
         String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        String destDir = MessageFormat.format("{0}/smsmms", storagePath);
+        String destDir = MessageFormat.format("{0}/mms", storagePath);
         new File(destDir).mkdirs();
         String destPath = destDir + "/spool";
         Log.e(TAG, "writing MMS to destPath="+destPath);
