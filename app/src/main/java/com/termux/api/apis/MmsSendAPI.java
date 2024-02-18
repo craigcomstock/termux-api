@@ -82,6 +82,7 @@ public class MmsSendAPI {
                         to = to.substring(1);
                     }
                 }
+                /*
                 String images = "";
                 String[] imageNames = message.getImageNames();
                 if (imageNames != null) {
@@ -93,7 +94,8 @@ public class MmsSendAPI {
                         images = images.substring(1);
                     }
                 }
-                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + " " + images + "\n";
+                 */
+                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + " " + imagePath + "\n";
                 try {
                     File file = new File(destPath);
                     FileWriter writer = new FileWriter(file, true);
