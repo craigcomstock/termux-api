@@ -9,8 +9,10 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 
 public class SmsReceiver extends BroadcastReceiver {
     @Override
@@ -32,8 +34,11 @@ public class SmsReceiver extends BroadcastReceiver {
         Log.w("SmsReceiver", "body: "+body);
 
         try {
-            String fileName = Environment.getExternalStorageDirectory() + "/smsinbox.log";
-            FileWriter fw = new FileWriter(fileName, true);
+            String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            String destDir = MessageFormat.format("{0}/sms", storagePath);
+            new File(destDir).mkdirs();
+            String destPath = destDir + "/spool";
+            FileWriter fw = new FileWriter(destPath, true);
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(sender + " " + body);
             bw.newLine();
