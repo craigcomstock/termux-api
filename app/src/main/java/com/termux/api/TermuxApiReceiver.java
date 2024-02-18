@@ -27,6 +27,7 @@ import com.termux.api.apis.MediaPlayerAPI;
 import com.termux.api.apis.MediaScannerAPI;
 import com.termux.api.apis.MicRecorderAPI;
 import com.termux.api.apis.MmsSendAPI;
+import com.termux.api.apis.MmsSetupAPI;
 import com.termux.api.apis.NfcAPI;
 import com.termux.api.apis.NotificationAPI;
 import com.termux.api.apis.NotificationListAPI;
@@ -210,13 +211,13 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                     MmsSendAPI.onReceive(this, context, intent);
                 }
                 break;
-            case "SmsSend":
-                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS)) {
-                    SmsSendAPI.onReceive(this, context, intent);
+            case "MmsSetup":
+                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_WAP_PUSH)) {
+                    MmsSetupAPI.onReceive(this, context, intent);
                 }
                 break;
-            case "SmsSetup":
-                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_SMS, Manifest.permission.RECEIVE_WAP_PUSH)) {
+            case "SmsSend":
+                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS)) {
                     SmsSendAPI.onReceive(this, context, intent);
                 }
                 break;
