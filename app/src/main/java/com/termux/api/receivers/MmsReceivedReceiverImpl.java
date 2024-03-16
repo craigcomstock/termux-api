@@ -44,7 +44,7 @@ public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
                     Log.e(TAG, "onMessageReceived, dateReceived="+dateReceived+", dateSent="+dateSent);
 
                     String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-                    String destDir = MessageFormat.format("{0}/smsmms", storagePath);
+                    String destDir = MessageFormat.format("{0}/mms", storagePath);
                     new File(destDir).mkdirs();
                     String destPath = destDir + "/spool";
                     Log.e(TAG, "writing MMS to filename="+destPath);
