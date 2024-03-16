@@ -72,47 +72,6 @@ public class MmsSendAPI {
                     message.setImage(BitmapFactory.decodeFile(imagePath));
                 }
 
-                //TODO don't log messages by default, let whatever is using this API handle that :)
-                String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-                String destDir = MessageFormat.format("{0}/mms", storagePath);
-                new File(destDir).mkdirs();
-                String destPath = destDir + "/outbox";
-                // TODO recipients is a String[] array, so might need to format in some commas?
-                String to = "";
-                if (recipients != null) {
-                    for (int i = 0; i < recipients.length; i++) {
-                        to += "," + recipients[i];
-                    }
-                    if (',' == to.charAt(0)) {
-                        to = to.substring(1);
-                    }
-                }
-                /*
-                String images = "";
-                String[] imageNames = message.getImageNames();
-                if (imageNames != null) {
-                    images += "images:";
-                    for (int i = 0; i < imageNames.length; i++) {
-                        images += "," + imageNames[i];
-                    }
-                    if (',' == images.charAt(0)) {
-                        images = images.substring(1);
-                    }
-                }
-                 */
-TelephonyManager tmgr = (TelephonyManager)mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
-String from = tmgr.getLine1Number();
-// needs READ_PHONE_STATE
-                String msg = DATE_FORMAT.format(new Date()) + from + " " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
-                try {
-                    File file = new File(destPath);
-                    FileWriter writer = new FileWriter(file, true);
-                    writer.write(msg);
-                    writer.close();
-                } catch (IOException ioe) {
-                    Logger.logError("Failed to write msg: "+msg);
-                    ioe.printStackTrace();
-                }
                 try {
                     transaction.sendNewMessage(message);
                 } catch(Exception e) {
