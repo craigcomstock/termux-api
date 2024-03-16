@@ -100,7 +100,10 @@ public class MmsSendAPI {
                     }
                 }
                  */
-                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
+TelephonyManager tmgr = (TelephonyManager)mAppContext.getSystemService(Context.TELEPHONY_SERVICE);
+String from = tmgr.getLine1Number();
+// needs READ_PHONE_STATE
+                String msg = DATE_FORMAT.format(new Date()) + from + " " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
                 try {
                     File file = new File(destPath);
                     FileWriter writer = new FileWriter(file, true);
