@@ -13,8 +13,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class SmsReceiver extends BroadcastReceiver {
+    // TODO share with MmsReceivedReceiverImpl.java the logging to spool and message formats
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Object[] smsExtra = (Object[]) intent.getExtras().get("pdus");
@@ -40,7 +45,7 @@ public class SmsReceiver extends BroadcastReceiver {
             String destPath = destDir + "/spool";
             FileWriter fw = new FileWriter(destPath, true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(sender + " " + body);
+            bw.write(DATE_FORMAT.format(new Date()) + " " + sender + " " + body);
             bw.newLine();
             bw.close();
         } catch( IOException ioe) {
