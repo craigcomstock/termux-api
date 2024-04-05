@@ -72,6 +72,58 @@ public class MmsSendAPI {
                     message.setImage(BitmapFactory.decodeFile(imagePath));
                 }
 
+                String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
+                String destDir = MessageFormat.format("{0}/mms", storagePath);
+                new File(destDir).mkdirs();
+                String destPath = destDir + "/outbox";
+                // TODO recipients is a String[] array, so might need to format in some commas?
+                String to = "";
+                if (recipients != null) {
+                    for (int i = 0; i < recipients.length; i++) {
+                        to += "," + recipients[i];
+                    }
+                    if (',' == to.charAt(0)) {
+                        to = to.substring(1);
+                    }
+                }
+                /*
+                String images = "";
+                String[] imageNames = message.getImageNames();
+                if (imageNames != null) {
+                    images += "images:";
+                    for (int i = 0; i < imageNames.length; i++) {
+                        images += "," + imageNames[i];
+                    }
+                    if (',' == images.charAt(0)) {
+                        images = images.substring(1);
+                    }
+                }
+                 */
+                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
+                try {
+                    File file = new File(destPath);
+                    FileWriter writer = new FileWriter(file, true);
+                    writer.write(msg);
+                    writer.close();
+                } catch (IOException ioe) {
+                    Logger.logError("Failed to write msg: "+msg);
+                    ioe.printStackTrace();
+                }
+                /*
+                in Transaction.java in android-smsmms library, TODO
+                            Log.v("send_transaction", "message id: " + messageId);
+
+            // set up sent and delivered pending intents to be used with message request
+            Intent sentIntent;
+            if (explicitSentSmsReceiver == null) {
+                sentIntent = new Intent(SMS_SENT);
+                BroadcastUtils.addClassName(context, sentIntent, SMS_SENT);
+            } else {
+                sentIntent = explicitSentSmsReceiver;
+            }
+            so we need to make sure and hook into  "sent" and "delivered" so we can update outbox/sentbox, etc
+            so that developers can know what the state of each message is!
+                 */
                 try {
                     transaction.sendNewMessage(message);
                 } catch(Exception e) {

@@ -39,6 +39,7 @@ public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
                     long dateSent = cursor.getLong(cursor.getColumnIndexOrThrow(Telephony.Mms.DATE_SENT)) * 1000;
                     String mmsId = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Mms.MESSAGE_ID));
                     String addr = getMmsAddr(context, id); // format: <from> <to,to,to,to>
+                    // TODO from is maybe not quite right?
                     String message = getMmsText(context, id);
                     Log.e(TAG, "onMessageReceived, id="+id+", mmsId="+mmsId+", addr="+addr+", message="+message);
                     Log.e(TAG, "onMessageReceived, dateReceived="+dateReceived+", dateSent="+dateSent);
@@ -58,16 +59,6 @@ public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
                         Log.e(TAG, "Failed to write msg: "+msg);
                         ioe.printStackTrace();
                     }
-
-//                    // and notify
-//                    Notification notification = new Notification.Builder(context)
-//                            .setContentText(message)
-//                            .setContentTitle("mms: " + addr + ":")
-//                            .setSmallIcon(R.drawable.ic_alert)
-//                            .setStyle(new Notification.BigTextStyle().bigText(message))
-//                            .build();
-//                    NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
-//                    notificationManagerCompat.notify(1, notification);
                 } while (cursor.moveToNext());
             }
         } finally {
@@ -96,6 +87,7 @@ public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
                     if (number != null && "151".equals(type)) { // TODO magic 151?
                         to += ","+number;
                     }
+                    // TODO FIXME, 137 type is NOT FROM, some other info is needed?
                     if (number != null && "137".equals(type)) { // TODO magic 137 means from?
                         from = number;
                     }
@@ -238,15 +230,5 @@ E/MmsReceivedReceiverImpl: getMmsText, _data=/data/user_de/0/com.android.provide
             Log.e(TAG, "Failed to write msg: "+msg);
             ioe.printStackTrace();
         }
-
-        // and notify
-//        Notification notification = new Notification.Builder(context)
-//                .setContentText(msg)
-//                .setContentTitle("mms: " + msg)
-//                .setSmallIcon(R.drawable.ic_alert)
-//                .setStyle(new Notification.BigTextStyle().bigText(msg))
-//                .build();
-//        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
-//        notificationManagerCompat.notify(1, notification);
     }
 }
