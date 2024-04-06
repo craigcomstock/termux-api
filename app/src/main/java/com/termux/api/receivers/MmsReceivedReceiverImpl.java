@@ -9,6 +9,8 @@ import android.util.Log;
 
 import com.klinker.android.send_message.MmsReceivedReceiver;
 
+import org.w3c.dom.Document;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,10 +22,16 @@ import java.io.OutputStream;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+
 
 public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
     private static final String TAG = "MmsReceivedReceiverImpl";
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 
     @Override
     public void onMessageReceived(Context context, Uri messageUri) {
@@ -132,13 +140,35 @@ E/MmsReceivedReceiverImpl: getMmsText, name=null
 E/MmsReceivedReceiverImpl: getMmsText, filename=null
 E/MmsReceivedReceiverImpl: getMmsText, _data=/data/user_de/0/com.android.providers.telephony/app_parts/PART_1681441002767_Craig Com.vcf
                      */
+                    /* maybe inside of text there is the filename for a vcf (x-vcard) file?
+                    04-05 21:08:28.106  3775  3809 E MmsReceivedReceiverImpl: <ref src="Craig Alt.vcf"/>
+                     */
                     Log.e(TAG, "getMmsText, text="+text);
                     if ("text/plain".equals(type)) {
                         if (text != null) {
                             message = message + " " + text + " ";
                         }
                     }
-//		    if (type.startsWith("image")) {
+                    /*
+                    TODO here, we need to be MUCH more nuanced about parsing this business
+                    a vcf card will come in with smil and that's where we know the filename
+                    and then later as another chunk will be the _data itself
+                    so need to associate par sections in SMIL with later chunks of data for that SMIL
+                    if ("application/smil".equals(type)) {
+                        Log.e(TAG, "CRAIG: need to parse smil/xml");
+                        try {
+                            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                            DocumentBuilder db = dbf.newDocumentBuilder();
+                            Document doc = db.parse(text);
+                            XPath xpath = XPathFactory.newInstance().newXPath();
+                            XPathExpression xpe = xpath.compile("//smil/body/par/ref[@src]");
+                            name = (String) xpe.evaluate(doc, XPathConstants.STRING);
+                        } catch( Exception e ) {
+                            e.printStackTrace();
+                            Log.e(TAG, "CRAIG: problem parsing smil content: " + e.getMessage());
+                        }
+                    }
+                     */
                     if (_data != null) {
                         String storagePath = Environment.getExternalStorageDirectory().getAbsolutePath();
                         String destDir = MessageFormat.format("{0}/mms/{1,number,#}", storagePath, id);
