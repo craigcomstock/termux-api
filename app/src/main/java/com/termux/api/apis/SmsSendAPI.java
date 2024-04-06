@@ -42,6 +42,7 @@ public class SmsSendAPI {
                     Logger.logError(LOG_TAG, "No recipient given");
                 } else {
                     final ArrayList<String> messages = smsManager.divideMessage(inputString);
+                    // TODO add sent and delivery intents to update status
                     for (String recipient : recipients) {
                         smsManager.sendMultipartTextMessage(recipient, null, messages, null, null);
                     }

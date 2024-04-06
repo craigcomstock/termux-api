@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 import android.telephony.SmsMessage;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -45,7 +46,9 @@ public class SmsReceiver extends BroadcastReceiver {
             String destPath = destDir + "/spool";
             FileWriter fw = new FileWriter(destPath, true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(new Date().getTime()/1000 + " " + sender + " . " + body);
+            TelephonyManager tmgr = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+            String to = tmgr.getLine1Number();
+            bw.write(new Date().getTime()/1000 + " " + sender + " " + to + " " + body);
             bw.newLine();
             bw.close();
         } catch( IOException ioe) {

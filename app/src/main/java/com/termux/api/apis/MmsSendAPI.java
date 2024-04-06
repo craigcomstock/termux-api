@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.telephony.SmsManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.RequiresPermission;
@@ -37,7 +38,6 @@ import com.klinker.android.send_message.Transaction;
 public class MmsSendAPI {
 
     private static final String TAG = "MmsSendAPI";
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS"); // TODO share with MMS printouts
 
     public static void onReceive(TermuxApiReceiver apiReceiver, final Context context, final Intent intent) {
         ResultReturner.returnData(apiReceiver, intent, new ResultReturner.WithStringInput() {
@@ -99,7 +99,9 @@ public class MmsSendAPI {
                     }
                 }
                  */
-                String msg = DATE_FORMAT.format(new Date()) + " (self) => " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
+                TelephonyManager tmgr = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+                String from = tmgr.getLine1Number();
+                String msg = new Date().getTime()/1000 + " " + from + " " + to + " " + message.getText() + (imagePath == null ? "" : " " + imagePath) + "\n";
                 try {
                     File file = new File(destPath);
                     FileWriter writer = new FileWriter(file, true);
@@ -126,6 +128,7 @@ public class MmsSendAPI {
                  */
                 try {
                     transaction.sendNewMessage(message);
+                    Logger.logError("CRAIG: MmsSendAPI, messageUri=" + message.getMessageUri());
                 } catch(Exception e) {
                     e.printStackTrace();
                     Logger.logError("Exception sending messages: "+message);
