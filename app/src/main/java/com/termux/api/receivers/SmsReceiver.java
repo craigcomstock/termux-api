@@ -13,12 +13,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SmsReceiver extends BroadcastReceiver {
     // TODO share with MmsReceivedReceiverImpl.java the logging to spool and message formats
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -26,9 +24,11 @@ public class SmsReceiver extends BroadcastReceiver {
         String body = "";
         String sender = "unknown";
 
+        Log.w("SmsReceiver", "CRAIG: onReceive has " + smsExtra.length + " smsExtra items");
         for (int i = 0; i < smsExtra.length; ++i) {
             // https://developer.android.com/reference/android/telephony/SmsMessage
             SmsMessage sms = SmsMessage.createFromPdu((byte[]) smsExtra[i]);
+            Log.w("SmsReceiver", "smsExtra["+i+"]=" + sms);
             if (sms.getOriginatingAddress() != null) {
                 sender = sms.getOriginatingAddress();
             }
@@ -45,7 +45,7 @@ public class SmsReceiver extends BroadcastReceiver {
             String destPath = destDir + "/spool";
             FileWriter fw = new FileWriter(destPath, true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(DATE_FORMAT.format(new Date()) + " " + sender + " " + body);
+            bw.write(new Date().getTime()/1000 + " " + sender + " . " + body);
             bw.newLine();
             bw.close();
         } catch( IOException ioe) {

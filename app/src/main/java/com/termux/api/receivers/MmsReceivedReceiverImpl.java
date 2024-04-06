@@ -49,7 +49,7 @@ public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
                     new File(destDir).mkdirs();
                     String destPath = destDir + "/spool";
                     Log.e(TAG, "writing MMS to filename="+destPath);
-                    String msg = DATE_FORMAT.format(dateReceived) + " " + addr + " " + message + "\n";
+                    String msg = dateReceived + " " + addr + " " + message + "\n";
                     try {
                         File file = new File(destPath);
                         FileWriter writer = new FileWriter(file, true);
@@ -101,7 +101,7 @@ public class MmsReceivedReceiverImpl extends MmsReceivedReceiver {
         if (to.charAt(0) == ',') {
             to = to.substring(1);
         }
-        return from + " => " + to;
+        return from + " " + to;
     }
 
     // TODO refactor to return text message and paths to any other attachments that we can save like images and such
