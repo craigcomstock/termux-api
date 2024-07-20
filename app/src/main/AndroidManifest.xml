@@ -40,6 +40,10 @@
     <uses-permission android:name="android.permission.TRANSMIT_IR" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- permission for WRITE_SECURE_SETTINGS is only granted to system apps -->
+    <!--<uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" /> -->
+    <!-- fix by rebuilding android? :( services/core/java/com/android/server/wm/WindowManagerInternal.java:    public abstract void setForcedDisplaySize(int
+ displayId, int width, int height); -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 

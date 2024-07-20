@@ -48,6 +48,7 @@ import com.termux.api.apis.VolumeAPI;
 import com.termux.api.apis.WallpaperAPI;
 import com.termux.api.apis.WifiAPI;
 import com.termux.api.activities.TermuxApiPermissionActivity;
+import com.termux.api.apis.WindowManagerAPI;
 import com.termux.api.util.ResultReturner;
 import com.termux.shared.data.IntentUtils;
 import com.termux.shared.logger.Logger;
@@ -275,6 +276,9 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                 break;
             case "WifiEnable":
                 WifiAPI.onReceiveWifiEnable(this, context, intent);
+                break;
+            case "WindowManager":
+                WindowManagerAPI.onReceive( this, context, intent);
                 break;
             default:
                 Logger.logError(LOG_TAG, "Unrecognized 'api_method' extra: '" + apiMethod + "'");
