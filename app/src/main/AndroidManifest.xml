@@ -4,6 +4,8 @@
     android:sharedUserId="${TERMUX_PACKAGE_NAME}">
 
 
+<!-- mms sending didn't work on e/OS which is android 14 as a base needed android.permission.MANAGE_SUBSCRIPTION_USER_ASSOCIATION -->
+<uses-permission android:name="android.permission.MANAGE_SUBSCRIPTION_USER_ASSOCIATION" />
 
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

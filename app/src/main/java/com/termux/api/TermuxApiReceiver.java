@@ -212,7 +212,7 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                 }
                 break;
             case "MmsSetup":
-                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_WAP_PUSH)) {
+                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_WAP_PUSH, Manifest.permission.MANAGE_SUBSCRIPTION_USER_ASSOCIATION)) {
                     MmsSetupAPI.onReceive(this, context, intent);
                 }
                 break;
