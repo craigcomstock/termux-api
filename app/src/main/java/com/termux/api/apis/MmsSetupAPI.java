@@ -23,7 +23,7 @@ public class MmsSetupAPI {
 				Logger.logDebug(LOG_TAG, "onReceive");
 
 		ResultReturner.returnData(apiReceiver, intent, new ResultReturner.ResultWriter() {
-			@RequiresPermission(allOf = {Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_WAP_PUSH})
+			@RequiresPermission(allOf = {Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_WAP_PUSH, Manifest.permission.MANAGE_SUBSCRIPTION_USER_ASSOCATION})
 			@Override
 			public void writeResult(PrintWriter out) {
 				Logger.logError("MmsSetupAPI.onReceive() called");
