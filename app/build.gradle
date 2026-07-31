@@ -1,16 +1,18 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion project.properties.compileSdkVersion.toInteger()
-    def appVersionName = System.getenv("TERMUX_API_APP_VERSION_NAME") ?: ""
-    def apkVersionTag = System.getenv("TERMUX_API_APK_VERSION_TAG") ?: ""
+    namespace "com.termux.api"
+
+    compileSdk project.properties.compileSdkVersion.toInteger()
+    def appVersionName = System.getenv("TERMUX_API_APP__BUILD__APP_VERSION_NAME") ?: ""
+    def apkVersionTag = System.getenv("TERMUX_API_APP__BUILD__APK_VERSION_TAG") ?: ""
 
     defaultConfig {
         applicationId "com.termux.api"
-        minSdkVersion project.properties.minSdkVersion.toInteger()
-        targetSdkVersion project.properties.targetSdkVersion.toInteger()
-        versionCode 51
-        versionName "0.50.1"
+        minSdk project.properties.minSdkVersion.toInteger()
+        targetSdk project.properties.targetSdkVersion.toInteger()
+        versionCode 1002
+        versionName "0.53.0"
 
         if (appVersionName) versionName = appVersionName
         validateVersionName(versionName)
@@ -33,7 +35,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources false // Reproducible builds
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
 
         debug {
@@ -42,37 +44,44 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
+
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            if (variant.buildType.name == "debug") {
-                outputFileName = new File("termux-api_" + (apkVersionTag ? apkVersionTag : "debug") + ".apk")
-            } else if (variant.buildType.name == "release") {
-                outputFileName = new File("termux-api_" + (apkVersionTag ? apkVersionTag : "release") + ".apk")
-            }
+            outputFileName = new File("termux-api-app_" +
+                    (apkVersionTag ? apkVersionTag : "v" + versionName + "+" + variant.buildType.name) + ".apk")
         }
     }
 
     packagingOptions {
         // Remove terminal-emulator and termux-shared JNI libs added via termux-shared dependency
-        exclude 'lib/*/libtermux.so'
-        exclude 'lib/*/liblocal-socket.so'
+        exclude "lib/*/libtermux.so"
+        exclude "lib/*/liblocal-socket.so"
     }
 }
 
 dependencies {
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.biometric:biometric:1.2.0-alpha03'
-    implementation 'androidx.media:media:1.4.3'
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:1.1.5"
 
-    implementation 'com.termux.termux-app:termux-shared:8c1749ef96'
+    implementation "com.google.android.material:material:1.12.0"
+    implementation "androidx.biometric:biometric:1.2.0-alpha05"
+    implementation "androidx.media:media:1.7.0"
+    implementation "androidx.preference:preference:1.2.1"
+
+    implementation "com.termux.termux-app:termux-shared:8aca6dbbf4"
     // Use if below libraries are published locally by termux-app with `./gradlew publishReleasePublicationToMavenLocal` and used with `mavenLocal()`.
     // If updates are done, republish there and sync project with gradle files here
     // https://github.com/termux/termux-app/wiki/Termux-Libraries
-    // implementation 'com.termux:termux-shared:0.118.0'
+    //implementation "com.termux:termux-shared:0.118.0"
+
+    implementation "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava"
+
+    implementation 'com.github.tibbi:android-smsmms:33fcaf94d9'
 }
 
 task versionName {

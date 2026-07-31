@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.termux.api"
     android:sharedUserId="${TERMUX_PACKAGE_NAME}">
 
 
@@ -12,9 +11,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BODY_SENSORS" />
+<!--    <uses-permission android:name="android.permission.BROADCAST_WAP_PUSH"/> -->
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.NFC"/>
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
@@ -22,6 +23,11 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.RECEIVE_WAP_PUSH" />
+    <uses-permission android:name="android.provider.Telephony.SMS_RECEIVED" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -36,6 +42,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.DUMP" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
 
     <!-- This permission is not used, but a permission is needed on the sharedfiles contentprovider,
          which will always use FLAG_GRANT_READ_URI_PERMISSION. -->
@@ -51,7 +59,7 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.location.network" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
+    <uses-feature android:name="android.hardware.telephony" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
@@ -68,13 +76,26 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <activity
-            android:name=".activities.TermuxAPIActivity"
-            android:theme="@style/Theme.BaseActivity.DayNight.NoActionBar"
-            android:exported="true">
+            android:name=".activities.TermuxAPIMainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BaseActivity.DayNight.NoActionBar">
+        </activity>
+
+        <activity-alias
+            android:name=".activities.TermuxAPILauncherActivity"
+            android:exported="true"
+            android:targetActivity=".activities.TermuxAPIMainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".settings.activities.TermuxAPISettingsActivity"
+            android:exported="true"
+            android:label="@string/sets__root___val__activity_title"
+            android:theme="@style/Theme.BaseActivity.DayNight.NoActionBar">
         </activity>
 
         <activity android:name=".activities.TermuxApiPermissionActivity"
@@ -125,11 +146,12 @@
             android:exported="false" />
 
         <!-- If you see "Unresolved package" errors for ReportActivity with manifest placeholder,
-        ignore it. Android Studio linter is broken and correct package name will be used at build time." -->
+             ignore it. Android Studio linter is broken and correct package name will be used at build time. -->
         <activity
             android:name="${TERMUX_PACKAGE_NAME}.shared.activities.ReportActivity"
-            android:theme="@style/Theme.MarkdownViewActivity.DayNight"
+            android:exported="false"
             android:documentLaunchMode="intoExisting"
+            android:theme="@style/Theme.MarkdownViewActivity.DayNight"
             tools:ignore="MissingClass" />
 
 
@@ -151,8 +173,64 @@
             android:exported="false"
             tools:ignore="MissingClass" />
 
+        <service
+            android:name="com.android.mms.transaction.TransactionService"
+            android:exported="true" />
 
+        <receiver
+            android:name=".receivers.SmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_DELIVER" />
+            </intent-filter>
+        </receiver>
 
+        <receiver
+            android:name=".receivers.MmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_WAP_PUSH">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.klinker.android.send_message.MmsSentReceiver"
+            android:taskAffinity="com.klinker.android.messaging.MMS_SENT" />
+
+        <receiver
+            android:name=".receivers.MmsReceivedReceiverImpl"
+            android:taskAffinity="com.klinker.android.messaging.MMS_RECEIVED" />
+
+        <service
+            android:name=".HeadlessSmsSendService"
+            android:exported="true"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE" >
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+        </service>
+
+        <activity android:name=".activities.ComposeSmsActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sms" />
+                <data android:scheme="smsto" />
+                <data android:scheme="mms" />
+                <data android:scheme="mmsto" />
+            </intent-filter>
+        </activity>
 
         <service
             android:name=".KeepAliveService"
@@ -192,6 +270,9 @@
             android:exported="false" />
 
         <service android:name=".apis.WallpaperAPI$WallpaperService"
+            android:exported="false" />
+
+        <service android:name=".apis.UsbAPI$UsbService"
             android:exported="false" />
 
     </application>

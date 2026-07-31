@@ -42,7 +42,6 @@ public class SAFAPI {
 
             super.onCreate(savedInstanceState);
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-            i.setFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             startActivityForResult(i, 0);
         }
         
@@ -270,19 +269,41 @@ public class SAFAPI {
             if (c == null || c.getCount() == 0) {
                 return;
             }
+            int index;
+            String mime = null;
             c.moveToNext();
             out.beginObject();
-            out.name("name");
-            out.value(c.getString(c.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)));
-            out.name("type");
-            String mime = c.getString(c.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE));
-            out.value(mime);
+
+            index = c.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+            if (index >= 0) {
+                out.name("name");
+                out.value(c.getString(index));
+            }
+
+            index = c.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE);
+            if (index >= 0) {
+                out.name("type");
+                mime = c.getString(index);
+                out.value(mime);
+            }
+
             out.name("uri");
             out.value(uri.toString());
-            if (! DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
-                out.name("length");
-                out.value(c.getInt(c.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)));
+
+            index = c.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
+            if (index >= 0) {
+                out.name("last_modified");
+                out.value(c.getLong(index));
             }
+
+            if (mime != null && !DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) {
+                index = c.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE);
+                if (index >= 0) {
+                    out.name("length");
+                    out.value(c.getInt(index));
+                }
+            }
+
             out.endObject();
         }
     }

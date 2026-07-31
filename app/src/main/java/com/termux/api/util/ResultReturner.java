@@ -7,11 +7,17 @@ import android.content.BroadcastReceiver;
 import android.content.BroadcastReceiver.PendingResult;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
+import android.net.LocalSocketAddress.Namespace;
 import android.os.ParcelFileDescriptor;
 import android.util.JsonWriter;
 
+import androidx.annotation.NonNull;
+
+import com.termux.shared.android.PackageUtils;
+import com.termux.shared.file.FileUtils;
 import com.termux.shared.logger.Logger;
 import com.termux.shared.termux.TermuxConstants;
 import com.termux.shared.termux.plugins.TermuxPluginUtils;
@@ -23,22 +29,24 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 public abstract class ResultReturner {
 
     @SuppressLint("StaticFieldLeak")
-    private static Context context;
+    public static Context context;
 
     private static final String LOG_TAG = "ResultReturner";
 
     /**
-     * An extra intent parameter which specifies a linux abstract namespace socket address where output from the API
+     * An extra intent parameter which specifies a unix socket address where output from the API
      * call should be written.
      */
     private static final String SOCKET_OUTPUT_EXTRA = "socket_output";
 
     /**
-     * An extra intent parameter which specifies a linux abstract namespace socket address where input to the API call
+     * An extra intent parameter which specifies a unix socket address where input to the API call
      * can be read from.
      */
     private static final String SOCKET_INPUT_EXTRA = "socket_input";
@@ -48,7 +56,7 @@ public abstract class ResultReturner {
     }
 
     /**
-     * Possible subclass of {@link ResultWriter} when input is to be read from stdin.
+     * Possible subclass of {@link ResultWriter} when input is to be read from {@link #SOCKET_INPUT_EXTRA}.
      */
     public static abstract class WithInput implements ResultWriter {
         protected InputStream in;
@@ -80,7 +88,7 @@ public abstract class ResultReturner {
     }
 
     /**
-     * Possible marker interface for a {@link ResultWriter} when input is to be read from stdin.
+     * Possible marker interface for a {@link ResultWriter} when input is to be read from {@link #SOCKET_INPUT_EXTRA}.
      */
     public static abstract class WithStringInput extends WithInput {
         protected String inputString;
@@ -103,14 +111,53 @@ public abstract class ResultReturner {
     }
 
     public static abstract class WithAncillaryFd implements ResultWriter {
-        private int fd = -1;
+        private LocalSocket outputSocket = null;
+        private final ParcelFileDescriptor[] pfds = { null };
 
-        public final void setFd(int newFd) {
-            fd = newFd;
+        public final void setOutputSocketForFds(LocalSocket outputSocket) {
+            this.outputSocket = outputSocket;
         }
 
-        public final int getFd() {
-            return fd;
+        public final void sendFd(PrintWriter out, int fd) {
+            // If fd already sent, then error out as we only support sending one currently.
+            if (this.pfds[0] != null) {
+                Logger.logStackTraceWithMessage(LOG_TAG, "File descriptor already sent", new Exception());
+                return;
+            }
+
+            this.pfds[0] = ParcelFileDescriptor.adoptFd(fd);
+            FileDescriptor[] fds = { pfds[0].getFileDescriptor() };
+
+            // Set fd to be sent
+            outputSocket.setFileDescriptorsForSend(fds);
+
+            // As per the docs:
+            // > The file descriptors will be sent with the next write of normal data, and will be
+            //   delivered in a single ancillary message.
+            // - https://developer.android.com/reference/android/net/LocalSocket#setFileDescriptorsForSend(java.io.FileDescriptor[])
+            // So we write the `@` character. It is not special, it is just the chosen character
+            // expected as the message by the native `termux-api` command when a fd is sent.
+            // - https://github.com/termux/termux-api-package/blob/e62bdadea3f26b60430bb85248f300fee68ecdcc/termux-api.c#L358
+            out.print("@");
+
+            // Actually send the by fd by flushing the data previously written (`@`) as PrintWriter is buffered.
+            out.flush();
+
+            // Clear existing fd after it has been sent, otherwise it will get sent for every data write,
+            // even though we are currently not writing anything else. Android will not clear it automatically.
+            // - https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/net/LocalSocketImpl.java;l=523?q=setFileDescriptorsForSend
+            // - https://cs.android.com/android/_/android/platform/frameworks/base/+/refs/tags/android-14.0.0_r1:core/jni/android_net_LocalSocketImpl.cpp;l=194
+            outputSocket.setFileDescriptorsForSend(null);
+        }
+
+        public final void cleanupFds() {
+          if (this.pfds[0] != null) {
+            try {
+              this.pfds[0].close();
+            } catch (IOException e) {
+              Logger.logStackTraceWithMessage(LOG_TAG, "Failed to close file descriptor", e);
+            }
+          }
         }
     }
 
@@ -141,70 +188,109 @@ public abstract class ResultReturner {
     }
 
     /**
+     * Get {@link LocalSocketAddress} for a socket address.
+     *
+     * If socket address starts with a path separator `/`, then a {@link Namespace#FILESYSTEM}
+     * {@link LocalSocketAddress} is returned, otherwise an {@link Namespace#ABSTRACT}.
+     *
+     * The `termux-api-package` versions `<= 0.58.0` create a abstract namespace socket and higher
+     * version create filesystem path socket.
+     *
+     * - https://man7.org/linux/man-pages/man7/unix.7.html
+     */
+    @SuppressLint("SdCardPath")
+    public static LocalSocketAddress getApiLocalSocketAddress(@NonNull Context context,
+                                                              @NonNull String socketLabel, @NonNull String socketAddress) {
+        if (socketAddress.startsWith("/")) {
+            ApplicationInfo termuxApplicationInfo = PackageUtils.getApplicationInfoForPackage(context,
+                    TermuxConstants.TERMUX_PACKAGE_NAME);
+            if (termuxApplicationInfo == null) {
+                throw new RuntimeException("Failed to get ApplicationInfo for the Termux app package: " +
+                        TermuxConstants.TERMUX_PACKAGE_NAME);
+            }
+
+            List<String> termuxAppDataDirectories = Arrays.asList(termuxApplicationInfo.dataDir,
+                    "/data/data/" + TermuxConstants.TERMUX_PACKAGE_NAME);
+            if (!FileUtils.isPathInDirPaths(socketAddress, termuxAppDataDirectories, true)) {
+                throw new RuntimeException("The " + socketLabel + " socket address \"" + socketAddress + "\"" +
+                        " is not under Termux app data directories: " + termuxAppDataDirectories);
+            }
+
+            return new LocalSocketAddress(socketAddress, Namespace.FILESYSTEM);
+        } else {
+            return new LocalSocketAddress(socketAddress, Namespace.ABSTRACT);
+        }
+    }
+
+    public static boolean shouldRunThreadForResultRunnable(Object context) {
+        return !(context instanceof IntentService);
+    }
+
+    /**
      * Run in a separate thread, unless the context is an IntentService.
      */
     public static void returnData(Object context, final Intent intent, final ResultWriter resultWriter) {
-        final PendingResult asyncResult = (context instanceof BroadcastReceiver) ? ((BroadcastReceiver) context)
-                .goAsync() : null;
+        final BroadcastReceiver receiver = (BroadcastReceiver) ((context instanceof BroadcastReceiver) ? context : null);
         final Activity activity = (Activity) ((context instanceof Activity) ? context : null);
+        final PendingResult asyncResult = receiver != null ? receiver.goAsync() : null;
+
+        // Store caller function stack trace to add to exception messages thrown inside `Runnable`
+        // lambda in case its run in a thread as it will not be included by default.
+        final Throwable callerStackTrace = shouldRunThreadForResultRunnable(context) ? new Exception("Called by:") : null;
 
         final Runnable runnable = () -> {
             PrintWriter writer = null;
             LocalSocket outputSocket = null;
             try {
-                final ParcelFileDescriptor[] pfds = { null };
                 outputSocket = new LocalSocket();
-                String outputSocketAdress = intent.getStringExtra(SOCKET_OUTPUT_EXTRA);
-                if (outputSocketAdress == null || outputSocketAdress.isEmpty())
+                String outputSocketAddress = intent.getStringExtra(SOCKET_OUTPUT_EXTRA);
+                if (outputSocketAddress == null || outputSocketAddress.isEmpty())
                     throw new IOException("Missing '" + SOCKET_OUTPUT_EXTRA + "' extra");
-                Logger.logDebug(LOG_TAG, "Connecting to output socket \"" + outputSocketAdress + "\"");
-                outputSocket.connect(new LocalSocketAddress(outputSocketAdress));
+                Logger.logDebug(LOG_TAG, "Connecting to output socket \"" + outputSocketAddress + "\"");
+                outputSocket.connect(getApiLocalSocketAddress(ResultReturner.context, "output", outputSocketAddress));
                 writer = new PrintWriter(outputSocket.getOutputStream());
 
                 if (resultWriter != null) {
+                    if(resultWriter instanceof WithAncillaryFd) {
+                      ((WithAncillaryFd) resultWriter).setOutputSocketForFds(outputSocket);
+                    }
                     if (resultWriter instanceof BinaryOutput) {
                         BinaryOutput bout = (BinaryOutput) resultWriter;
                         bout.setOutput(outputSocket.getOutputStream());
                     }
                     if (resultWriter instanceof WithInput) {
                         try (LocalSocket inputSocket = new LocalSocket()) {
-                            String inputSocketAdress = intent.getStringExtra(SOCKET_INPUT_EXTRA);
-                            if (inputSocketAdress == null || inputSocketAdress.isEmpty())
+                            String inputSocketAddress = intent.getStringExtra(SOCKET_INPUT_EXTRA);
+                            if (inputSocketAddress == null || inputSocketAddress.isEmpty())
                                 throw new IOException("Missing '" + SOCKET_INPUT_EXTRA + "' extra");
-                            inputSocket.connect(new LocalSocketAddress(inputSocketAdress));
+                            inputSocket.connect(getApiLocalSocketAddress(ResultReturner.context, "input", inputSocketAddress));
                             ((WithInput) resultWriter).setInput(inputSocket.getInputStream());
                             resultWriter.writeResult(writer);
                         }
                     } else {
                         resultWriter.writeResult(writer);
                     }
-                    if(resultWriter instanceof WithAncillaryFd) {
-                        int fd = ((WithAncillaryFd) resultWriter).getFd();
-                        if (fd >= 0) {
-                            pfds[0] = ParcelFileDescriptor.adoptFd(fd);
-                            FileDescriptor[] fds = { pfds[0].getFileDescriptor() };
-                            outputSocket.setFileDescriptorsForSend(fds);
-                        }
+                    if (resultWriter instanceof WithAncillaryFd) {
+                      ((WithAncillaryFd) resultWriter).cleanupFds();
                     }
                 }
 
-                if(pfds[0] != null) {
-                    pfds[0].close();
-                }
 
-                if (asyncResult != null) {
+                if (asyncResult != null && receiver.isOrderedBroadcast()) {
                     asyncResult.setResultCode(0);
                 } else if (activity != null) {
                     activity.setResult(0);
                 }
             } catch (Throwable t) {
                 String message = "Error in " + LOG_TAG;
+                if (callerStackTrace != null)
+                    t.addSuppressed(callerStackTrace);
                 Logger.logStackTraceWithMessage(LOG_TAG, message, t);
 
                 TermuxPluginUtils.sendPluginCommandErrorNotification(ResultReturner.context, LOG_TAG,
                         TermuxConstants.TERMUX_API_APP_NAME + " Error", message, t);
 
-                if (asyncResult != null) {
+                if (asyncResult != null && receiver != null && receiver.isOrderedBroadcast()) {
                     asyncResult.setResultCode(1);
                 } else if (activity != null) {
                     activity.setResult(1);
@@ -231,11 +317,11 @@ public abstract class ResultReturner {
             }
         };
 
-        if (context instanceof IntentService) {
-            runnable.run();
-        } else {
+        if (shouldRunThreadForResultRunnable(context)) {
             new Thread(runnable).start();
-        }
+        } else {
+            runnable.run();
+       }
     }
 
     public static void setContext(Context context) {

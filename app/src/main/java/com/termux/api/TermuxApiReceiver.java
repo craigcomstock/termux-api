@@ -26,6 +26,8 @@ import com.termux.api.apis.LocationAPI;
 import com.termux.api.apis.MediaPlayerAPI;
 import com.termux.api.apis.MediaScannerAPI;
 import com.termux.api.apis.MicRecorderAPI;
+import com.termux.api.apis.MmsSendAPI;
+import com.termux.api.apis.MmsSetupAPI;
 import com.termux.api.apis.NfcAPI;
 import com.termux.api.apis.NotificationAPI;
 import com.termux.api.apis.NotificationListAPI;
@@ -204,6 +206,16 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                     SmsInboxAPI.onReceive(this, context, intent);
                 }
                 break;
+            case "MmsSend":
+                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_SMS)) {
+                    MmsSendAPI.onReceive(this, context, intent);
+                }
+                break;
+            case "MmsSetup":
+                if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.RECEIVE_MMS, Manifest.permission.RECEIVE_WAP_PUSH)) {
+                    MmsSetupAPI.onReceive(this, context, intent);
+                }
+                break;
             case "SmsSend":
                 if (TermuxApiPermissionActivity.checkAndRequestPermissions(context, intent, Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS)) {
                     SmsSendAPI.onReceive(this, context, intent);
@@ -242,7 +254,7 @@ public class TermuxApiReceiver extends BroadcastReceiver {
                 TorchAPI.onReceive(this, context, intent);
                 break;
             case "Usb":
-                UsbAPI.onReceive(this, context, intent);
+                UsbAPI.onReceive(context, intent);
                 break;
             case "Vibrate":
                 VibrateAPI.onReceive(this, context, intent);
