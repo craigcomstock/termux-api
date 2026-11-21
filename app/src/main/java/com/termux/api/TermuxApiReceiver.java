@@ -42,6 +42,9 @@ public class TermuxApiReceiver extends BroadcastReceiver {
 	TermuxApiLogger.error("intent had extra, api_method="+apiMethod);
 
         switch (apiMethod) {
+case "MediaButton":
+    MediaButtonAPI.onReceive(this, context, intent);
+    break;
             case "AudioInfo":
                 AudioAPI.onReceive(this, context, intent);
                 break;
