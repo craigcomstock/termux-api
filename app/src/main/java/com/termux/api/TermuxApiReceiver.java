@@ -23,6 +23,7 @@ import com.termux.api.apis.InfraredAPI;
 import com.termux.api.apis.JobSchedulerAPI;
 import com.termux.api.apis.KeystoreAPI;
 import com.termux.api.apis.LocationAPI;
+import com.termux.api.apis.MediaButtonAPI;
 import com.termux.api.apis.MediaPlayerAPI;
 import com.termux.api.apis.MediaScannerAPI;
 import com.termux.api.apis.MicRecorderAPI;
@@ -95,6 +96,9 @@ public class TermuxApiReceiver extends BroadcastReceiver {
         }
 
         switch (apiMethod) {
+            case "MediaButton":
+                MediaButtonAPI.onReceive(this, context, intent);
+                break;
             case "AudioInfo":
                 AudioAPI.onReceive(this, context, intent);
                 break;
